@@ -1,0 +1,6 @@
+[gd_resource type="Theme" format=3]
+
+; Dark UI. Godot's default theme is already dark, so its controls (fields,
+; buttons, caret) need no overrides yet; app-wide colours go here as they come.
+
+[resource]

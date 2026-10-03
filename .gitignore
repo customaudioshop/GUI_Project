@@ -1,0 +1,14 @@
+# macOS
+.DS_Store
+
+# Per-user Claude Code settings
+.claude/settings.local.json
+
+# Godot caches and Android build templates (each project also has its own)
+.godot/
+android/
+
+# .NET build output
+bin/
+obj/
+*.user
