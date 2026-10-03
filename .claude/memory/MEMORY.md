@@ -1,0 +1,5 @@
+- [Always answer in Korean](always-answer-korean.md) — reply in Korean even when the user writes in English
+- [Work machines](user-work-machines.md) — home Mac + office Windows PC and Mac; keep tooling cross-platform (see docs/Dev-setup.md)
+- [GUI Builder project overview](gui-builder-project-overview.md) — builder/player split, device-control use case, C# is developer-only, users get a DSL
+- [GUI Builder design decisions](gui-builder-design-decisions.md) — accepted 2026-10-04: base resolution + fit, one value per widget, receive rules, echo prevention, motion = fader/encoder
+- [Conversation logs](conversations/) — per-day Markdown transcripts (2026-10-03.md, 2026-10-04.md), converted from session .jsonl

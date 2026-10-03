@@ -1,0 +1,2126 @@
+{
+  "format": "guipkg",
+  "formatVersion": 1,
+  "meta": {
+    "name": "Mixer example",
+    "author": "",
+    "created": "2026-10-03T22:49:54Z"
+  },
+  "devices": {
+    "mixer1": {
+      "protocol": "tcp",
+      "host": "192.168.0.10",
+      "port": 5000
+    }
+  },
+  "layouts": [
+    {
+      "id": "layout1",
+      "name": "Tablet",
+      "screen": {
+        "width": 1280,
+        "height": 800,
+        "orientation": "landscape",
+        "fit": "keep",
+        "background": "#1E1E1E"
+      },
+      "pages": [
+        {
+          "id": "main",
+          "name": "Main",
+          "background": "#202020",
+          "widgets": [
+            {
+              "id": "ch1",
+              "type": "group",
+              "x": 40,
+              "y": 60,
+              "w": 120,
+              "h": 640,
+              "params": {
+                "ch": 1
+              },
+              "children": [
+                {
+                  "id": "ch1_eq_hi",
+                  "type": "encoder",
+                  "x": 20,
+                  "y": 10,
+                  "w": 80,
+                  "h": 80,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch1_eq_mid",
+                  "type": "encoder",
+                  "x": 20,
+                  "y": 100,
+                  "w": 80,
+                  "h": 80,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch1_eq_lo",
+                  "type": "encoder",
+                  "x": 20,
+                  "y": 190,
+                  "w": 80,
+                  "h": 80,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch1_mute",
+                  "type": "button",
+                  "x": 20,
+                  "y": 290,
+                  "w": 80,
+                  "h": 40,
+                  "mode": "toggle",
+                  "style": {
+                    "text": "MUTE",
+                    "color": "#3A7BD5",
+                    "fontSize": 16
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 1,
+                    "default": 0
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch1_aux",
+                  "type": "button",
+                  "x": 20,
+                  "y": 340,
+                  "w": 80,
+                  "h": 40,
+                  "mode": "toggle",
+                  "style": {
+                    "text": "AUX",
+                    "color": "#3A7BD5",
+                    "fontSize": 16
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 1,
+                    "default": 0
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch1_fader",
+                  "type": "fader",
+                  "x": 30,
+                  "y": 400,
+                  "w": 60,
+                  "h": 230,
+                  "orientation": "vertical",
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "touchMode": "relative",
+                    "sensitivity": 1.0,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {
+                    "change": "set $level = round($value * 255)\nsend mixer1 \"SET CH$ch VOL $level\\n\""
+                  },
+                  "receive": []
+                }
+              ],
+              "style": {
+                "background": "#26282B"
+              }
+            },
+            {
+              "id": "ch2",
+              "type": "group",
+              "x": 160,
+              "y": 60,
+              "w": 120,
+              "h": 640,
+              "params": {
+                "ch": 2
+              },
+              "children": [
+                {
+                  "id": "ch2_eq_hi",
+                  "type": "encoder",
+                  "x": 20,
+                  "y": 10,
+                  "w": 80,
+                  "h": 80,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch2_eq_mid",
+                  "type": "encoder",
+                  "x": 20,
+                  "y": 100,
+                  "w": 80,
+                  "h": 80,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch2_eq_lo",
+                  "type": "encoder",
+                  "x": 20,
+                  "y": 190,
+                  "w": 80,
+                  "h": 80,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch2_mute",
+                  "type": "button",
+                  "x": 20,
+                  "y": 290,
+                  "w": 80,
+                  "h": 40,
+                  "mode": "toggle",
+                  "style": {
+                    "text": "MUTE",
+                    "color": "#3A7BD5",
+                    "fontSize": 16
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 1,
+                    "default": 0
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch2_aux",
+                  "type": "button",
+                  "x": 20,
+                  "y": 340,
+                  "w": 80,
+                  "h": 40,
+                  "mode": "toggle",
+                  "style": {
+                    "text": "AUX",
+                    "color": "#3A7BD5",
+                    "fontSize": 16
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 1,
+                    "default": 0
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch2_fader",
+                  "type": "fader",
+                  "x": 30,
+                  "y": 400,
+                  "w": 60,
+                  "h": 230,
+                  "orientation": "vertical",
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "touchMode": "relative",
+                    "sensitivity": 1.0,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {
+                    "change": "set $level = round($value * 255)\nsend mixer1 \"SET CH$ch VOL $level\\n\""
+                  },
+                  "receive": []
+                }
+              ],
+              "style": {
+                "background": "#26282B"
+              }
+            },
+            {
+              "id": "ch3",
+              "type": "group",
+              "x": 280,
+              "y": 60,
+              "w": 120,
+              "h": 640,
+              "params": {
+                "ch": 3
+              },
+              "children": [
+                {
+                  "id": "ch3_eq_hi",
+                  "type": "encoder",
+                  "x": 20,
+                  "y": 10,
+                  "w": 80,
+                  "h": 80,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch3_eq_mid",
+                  "type": "encoder",
+                  "x": 20,
+                  "y": 100,
+                  "w": 80,
+                  "h": 80,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch3_eq_lo",
+                  "type": "encoder",
+                  "x": 20,
+                  "y": 190,
+                  "w": 80,
+                  "h": 80,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch3_mute",
+                  "type": "button",
+                  "x": 20,
+                  "y": 290,
+                  "w": 80,
+                  "h": 40,
+                  "mode": "toggle",
+                  "style": {
+                    "text": "MUTE",
+                    "color": "#3A7BD5",
+                    "fontSize": 16
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 1,
+                    "default": 0
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch3_aux",
+                  "type": "button",
+                  "x": 20,
+                  "y": 340,
+                  "w": 80,
+                  "h": 40,
+                  "mode": "toggle",
+                  "style": {
+                    "text": "AUX",
+                    "color": "#3A7BD5",
+                    "fontSize": 16
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 1,
+                    "default": 0
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch3_fader",
+                  "type": "fader",
+                  "x": 30,
+                  "y": 400,
+                  "w": 60,
+                  "h": 230,
+                  "orientation": "vertical",
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "touchMode": "relative",
+                    "sensitivity": 1.0,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {
+                    "change": "set $level = round($value * 255)\nsend mixer1 \"SET CH$ch VOL $level\\n\""
+                  },
+                  "receive": []
+                }
+              ],
+              "style": {
+                "background": "#26282B"
+              }
+            },
+            {
+              "id": "ch4",
+              "type": "group",
+              "x": 400,
+              "y": 60,
+              "w": 120,
+              "h": 640,
+              "params": {
+                "ch": 4
+              },
+              "children": [
+                {
+                  "id": "ch4_eq_hi",
+                  "type": "encoder",
+                  "x": 20,
+                  "y": 10,
+                  "w": 80,
+                  "h": 80,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch4_eq_mid",
+                  "type": "encoder",
+                  "x": 20,
+                  "y": 100,
+                  "w": 80,
+                  "h": 80,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch4_eq_lo",
+                  "type": "encoder",
+                  "x": 20,
+                  "y": 190,
+                  "w": 80,
+                  "h": 80,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch4_mute",
+                  "type": "button",
+                  "x": 20,
+                  "y": 290,
+                  "w": 80,
+                  "h": 40,
+                  "mode": "toggle",
+                  "style": {
+                    "text": "MUTE",
+                    "color": "#3A7BD5",
+                    "fontSize": 16
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 1,
+                    "default": 0
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch4_aux",
+                  "type": "button",
+                  "x": 20,
+                  "y": 340,
+                  "w": 80,
+                  "h": 40,
+                  "mode": "toggle",
+                  "style": {
+                    "text": "AUX",
+                    "color": "#3A7BD5",
+                    "fontSize": 16
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 1,
+                    "default": 0
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch4_fader",
+                  "type": "fader",
+                  "x": 30,
+                  "y": 400,
+                  "w": 60,
+                  "h": 230,
+                  "orientation": "vertical",
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "touchMode": "relative",
+                    "sensitivity": 1.0,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {
+                    "change": "set $level = round($value * 255)\nsend mixer1 \"SET CH$ch VOL $level\\n\""
+                  },
+                  "receive": []
+                }
+              ],
+              "style": {
+                "background": "#26282B"
+              }
+            },
+            {
+              "id": "ch5",
+              "type": "group",
+              "x": 520,
+              "y": 60,
+              "w": 120,
+              "h": 640,
+              "params": {
+                "ch": 5
+              },
+              "children": [
+                {
+                  "id": "ch5_eq_hi",
+                  "type": "encoder",
+                  "x": 20,
+                  "y": 10,
+                  "w": 80,
+                  "h": 80,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch5_eq_mid",
+                  "type": "encoder",
+                  "x": 20,
+                  "y": 100,
+                  "w": 80,
+                  "h": 80,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch5_eq_lo",
+                  "type": "encoder",
+                  "x": 20,
+                  "y": 190,
+                  "w": 80,
+                  "h": 80,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch5_mute",
+                  "type": "button",
+                  "x": 20,
+                  "y": 290,
+                  "w": 80,
+                  "h": 40,
+                  "mode": "toggle",
+                  "style": {
+                    "text": "MUTE",
+                    "color": "#3A7BD5",
+                    "fontSize": 16
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 1,
+                    "default": 0
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch5_aux",
+                  "type": "button",
+                  "x": 20,
+                  "y": 340,
+                  "w": 80,
+                  "h": 40,
+                  "mode": "toggle",
+                  "style": {
+                    "text": "AUX",
+                    "color": "#3A7BD5",
+                    "fontSize": 16
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 1,
+                    "default": 0
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch5_fader",
+                  "type": "fader",
+                  "x": 30,
+                  "y": 400,
+                  "w": 60,
+                  "h": 230,
+                  "orientation": "vertical",
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "touchMode": "relative",
+                    "sensitivity": 1.0,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {
+                    "change": "set $level = round($value * 255)\nsend mixer1 \"SET CH$ch VOL $level\\n\""
+                  },
+                  "receive": []
+                }
+              ],
+              "style": {
+                "background": "#26282B"
+              }
+            },
+            {
+              "id": "ch6",
+              "type": "group",
+              "x": 640,
+              "y": 60,
+              "w": 120,
+              "h": 640,
+              "params": {
+                "ch": 6
+              },
+              "children": [
+                {
+                  "id": "ch6_eq_hi",
+                  "type": "encoder",
+                  "x": 20,
+                  "y": 10,
+                  "w": 80,
+                  "h": 80,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch6_eq_mid",
+                  "type": "encoder",
+                  "x": 20,
+                  "y": 100,
+                  "w": 80,
+                  "h": 80,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch6_eq_lo",
+                  "type": "encoder",
+                  "x": 20,
+                  "y": 190,
+                  "w": 80,
+                  "h": 80,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch6_mute",
+                  "type": "button",
+                  "x": 20,
+                  "y": 290,
+                  "w": 80,
+                  "h": 40,
+                  "mode": "toggle",
+                  "style": {
+                    "text": "MUTE",
+                    "color": "#3A7BD5",
+                    "fontSize": 16
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 1,
+                    "default": 0
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch6_aux",
+                  "type": "button",
+                  "x": 20,
+                  "y": 340,
+                  "w": 80,
+                  "h": 40,
+                  "mode": "toggle",
+                  "style": {
+                    "text": "AUX",
+                    "color": "#3A7BD5",
+                    "fontSize": 16
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 1,
+                    "default": 0
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch6_fader",
+                  "type": "fader",
+                  "x": 30,
+                  "y": 400,
+                  "w": 60,
+                  "h": 230,
+                  "orientation": "vertical",
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "touchMode": "relative",
+                    "sensitivity": 1.0,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {
+                    "change": "set $level = round($value * 255)\nsend mixer1 \"SET CH$ch VOL $level\\n\""
+                  },
+                  "receive": []
+                }
+              ],
+              "style": {
+                "background": "#26282B"
+              }
+            },
+            {
+              "id": "ch7",
+              "type": "group",
+              "x": 760,
+              "y": 60,
+              "w": 120,
+              "h": 640,
+              "params": {
+                "ch": 7
+              },
+              "children": [
+                {
+                  "id": "ch7_eq_hi",
+                  "type": "encoder",
+                  "x": 20,
+                  "y": 10,
+                  "w": 80,
+                  "h": 80,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch7_eq_mid",
+                  "type": "encoder",
+                  "x": 20,
+                  "y": 100,
+                  "w": 80,
+                  "h": 80,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch7_eq_lo",
+                  "type": "encoder",
+                  "x": 20,
+                  "y": 190,
+                  "w": 80,
+                  "h": 80,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch7_mute",
+                  "type": "button",
+                  "x": 20,
+                  "y": 290,
+                  "w": 80,
+                  "h": 40,
+                  "mode": "toggle",
+                  "style": {
+                    "text": "MUTE",
+                    "color": "#3A7BD5",
+                    "fontSize": 16
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 1,
+                    "default": 0
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch7_aux",
+                  "type": "button",
+                  "x": 20,
+                  "y": 340,
+                  "w": 80,
+                  "h": 40,
+                  "mode": "toggle",
+                  "style": {
+                    "text": "AUX",
+                    "color": "#3A7BD5",
+                    "fontSize": 16
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 1,
+                    "default": 0
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch7_fader",
+                  "type": "fader",
+                  "x": 30,
+                  "y": 400,
+                  "w": 60,
+                  "h": 230,
+                  "orientation": "vertical",
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "touchMode": "relative",
+                    "sensitivity": 1.0,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {
+                    "change": "set $level = round($value * 255)\nsend mixer1 \"SET CH$ch VOL $level\\n\""
+                  },
+                  "receive": []
+                }
+              ],
+              "style": {
+                "background": "#26282B"
+              }
+            },
+            {
+              "id": "ch8",
+              "type": "group",
+              "x": 880,
+              "y": 60,
+              "w": 120,
+              "h": 640,
+              "params": {
+                "ch": 8
+              },
+              "children": [
+                {
+                  "id": "ch8_eq_hi",
+                  "type": "encoder",
+                  "x": 20,
+                  "y": 10,
+                  "w": 80,
+                  "h": 80,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch8_eq_mid",
+                  "type": "encoder",
+                  "x": 20,
+                  "y": 100,
+                  "w": 80,
+                  "h": 80,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch8_eq_lo",
+                  "type": "encoder",
+                  "x": 20,
+                  "y": 190,
+                  "w": 80,
+                  "h": 80,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch8_mute",
+                  "type": "button",
+                  "x": 20,
+                  "y": 290,
+                  "w": 80,
+                  "h": 40,
+                  "mode": "toggle",
+                  "style": {
+                    "text": "MUTE",
+                    "color": "#3A7BD5",
+                    "fontSize": 16
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 1,
+                    "default": 0
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch8_aux",
+                  "type": "button",
+                  "x": 20,
+                  "y": 340,
+                  "w": 80,
+                  "h": 40,
+                  "mode": "toggle",
+                  "style": {
+                    "text": "AUX",
+                    "color": "#3A7BD5",
+                    "fontSize": 16
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 1,
+                    "default": 0
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch8_fader",
+                  "type": "fader",
+                  "x": 30,
+                  "y": 400,
+                  "w": 60,
+                  "h": 230,
+                  "orientation": "vertical",
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "touchMode": "relative",
+                    "sensitivity": 1.0,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {
+                    "change": "set $level = round($value * 255)\nsend mixer1 \"SET CH$ch VOL $level\\n\""
+                  },
+                  "receive": []
+                }
+              ],
+              "style": {
+                "background": "#26282B"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "layout2",
+      "name": "Phone",
+      "screen": {
+        "width": 393,
+        "height": 852,
+        "orientation": "portrait",
+        "fit": "keep",
+        "background": "#1E1E1E"
+      },
+      "pages": [
+        {
+          "id": "main",
+          "name": "Main",
+          "background": "#202020",
+          "widgets": [
+            {
+              "id": "ch1",
+              "type": "group",
+              "x": 28,
+              "y": 64,
+              "w": 84,
+              "h": 682,
+              "params": {
+                "ch": 1
+              },
+              "children": [
+                {
+                  "id": "ch1_eq_hi",
+                  "type": "encoder",
+                  "x": 14,
+                  "y": 11,
+                  "w": 56,
+                  "h": 85,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch1_eq_mid",
+                  "type": "encoder",
+                  "x": 14,
+                  "y": 107,
+                  "w": 56,
+                  "h": 85,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch1_eq_lo",
+                  "type": "encoder",
+                  "x": 14,
+                  "y": 202,
+                  "w": 56,
+                  "h": 85,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch1_mute",
+                  "type": "button",
+                  "x": 14,
+                  "y": 309,
+                  "w": 56,
+                  "h": 43,
+                  "mode": "toggle",
+                  "style": {
+                    "text": "MUTE",
+                    "color": "#3A7BD5",
+                    "fontSize": 11
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 1,
+                    "default": 0
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch1_aux",
+                  "type": "button",
+                  "x": 14,
+                  "y": 362,
+                  "w": 56,
+                  "h": 43,
+                  "mode": "toggle",
+                  "style": {
+                    "text": "AUX",
+                    "color": "#3A7BD5",
+                    "fontSize": 11
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 1,
+                    "default": 0
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch1_fader",
+                  "type": "fader",
+                  "x": 21,
+                  "y": 426,
+                  "w": 42,
+                  "h": 245,
+                  "orientation": "vertical",
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "touchMode": "relative",
+                    "sensitivity": 1.0,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {
+                    "change": "set $level = round($value * 255)\nsend mixer1 \"SET CH$ch VOL $level\\n\""
+                  },
+                  "receive": []
+                }
+              ],
+              "style": {
+                "background": "#26282B"
+              }
+            },
+            {
+              "id": "ch2",
+              "type": "group",
+              "x": 112,
+              "y": 64,
+              "w": 84,
+              "h": 682,
+              "params": {
+                "ch": 2
+              },
+              "children": [
+                {
+                  "id": "ch2_eq_hi",
+                  "type": "encoder",
+                  "x": 14,
+                  "y": 11,
+                  "w": 56,
+                  "h": 85,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch2_eq_mid",
+                  "type": "encoder",
+                  "x": 14,
+                  "y": 107,
+                  "w": 56,
+                  "h": 85,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch2_eq_lo",
+                  "type": "encoder",
+                  "x": 14,
+                  "y": 202,
+                  "w": 56,
+                  "h": 85,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch2_mute",
+                  "type": "button",
+                  "x": 14,
+                  "y": 309,
+                  "w": 56,
+                  "h": 43,
+                  "mode": "toggle",
+                  "style": {
+                    "text": "MUTE",
+                    "color": "#3A7BD5",
+                    "fontSize": 11
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 1,
+                    "default": 0
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch2_aux",
+                  "type": "button",
+                  "x": 14,
+                  "y": 362,
+                  "w": 56,
+                  "h": 43,
+                  "mode": "toggle",
+                  "style": {
+                    "text": "AUX",
+                    "color": "#3A7BD5",
+                    "fontSize": 11
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 1,
+                    "default": 0
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch2_fader",
+                  "type": "fader",
+                  "x": 21,
+                  "y": 426,
+                  "w": 42,
+                  "h": 245,
+                  "orientation": "vertical",
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "touchMode": "relative",
+                    "sensitivity": 1.0,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {
+                    "change": "set $level = round($value * 255)\nsend mixer1 \"SET CH$ch VOL $level\\n\""
+                  },
+                  "receive": []
+                }
+              ],
+              "style": {
+                "background": "#26282B"
+              }
+            },
+            {
+              "id": "ch3",
+              "type": "group",
+              "x": 197,
+              "y": 64,
+              "w": 84,
+              "h": 682,
+              "params": {
+                "ch": 3
+              },
+              "children": [
+                {
+                  "id": "ch3_eq_hi",
+                  "type": "encoder",
+                  "x": 14,
+                  "y": 11,
+                  "w": 56,
+                  "h": 85,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch3_eq_mid",
+                  "type": "encoder",
+                  "x": 14,
+                  "y": 107,
+                  "w": 56,
+                  "h": 85,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch3_eq_lo",
+                  "type": "encoder",
+                  "x": 14,
+                  "y": 202,
+                  "w": 56,
+                  "h": 85,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch3_mute",
+                  "type": "button",
+                  "x": 14,
+                  "y": 309,
+                  "w": 56,
+                  "h": 43,
+                  "mode": "toggle",
+                  "style": {
+                    "text": "MUTE",
+                    "color": "#3A7BD5",
+                    "fontSize": 11
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 1,
+                    "default": 0
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch3_aux",
+                  "type": "button",
+                  "x": 14,
+                  "y": 362,
+                  "w": 56,
+                  "h": 43,
+                  "mode": "toggle",
+                  "style": {
+                    "text": "AUX",
+                    "color": "#3A7BD5",
+                    "fontSize": 11
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 1,
+                    "default": 0
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch3_fader",
+                  "type": "fader",
+                  "x": 21,
+                  "y": 426,
+                  "w": 42,
+                  "h": 245,
+                  "orientation": "vertical",
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "touchMode": "relative",
+                    "sensitivity": 1.0,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {
+                    "change": "set $level = round($value * 255)\nsend mixer1 \"SET CH$ch VOL $level\\n\""
+                  },
+                  "receive": []
+                }
+              ],
+              "style": {
+                "background": "#26282B"
+              }
+            },
+            {
+              "id": "ch4",
+              "type": "group",
+              "x": 281,
+              "y": 64,
+              "w": 84,
+              "h": 682,
+              "params": {
+                "ch": 4
+              },
+              "children": [
+                {
+                  "id": "ch4_eq_hi",
+                  "type": "encoder",
+                  "x": 14,
+                  "y": 11,
+                  "w": 56,
+                  "h": 85,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch4_eq_mid",
+                  "type": "encoder",
+                  "x": 14,
+                  "y": 107,
+                  "w": 56,
+                  "h": 85,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch4_eq_lo",
+                  "type": "encoder",
+                  "x": 14,
+                  "y": 202,
+                  "w": 56,
+                  "h": 85,
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "endless": false,
+                    "angleRange": 270,
+                    "drag": "vertical",
+                    "sensitivity": 1.0,
+                    "acceleration": true,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch4_mute",
+                  "type": "button",
+                  "x": 14,
+                  "y": 309,
+                  "w": 56,
+                  "h": 43,
+                  "mode": "toggle",
+                  "style": {
+                    "text": "MUTE",
+                    "color": "#3A7BD5",
+                    "fontSize": 11
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 1,
+                    "default": 0
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch4_aux",
+                  "type": "button",
+                  "x": 14,
+                  "y": 362,
+                  "w": 56,
+                  "h": 43,
+                  "mode": "toggle",
+                  "style": {
+                    "text": "AUX",
+                    "color": "#3A7BD5",
+                    "fontSize": 11
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 1,
+                    "default": 0
+                  },
+                  "on": {},
+                  "receive": []
+                },
+                {
+                  "id": "ch4_fader",
+                  "type": "fader",
+                  "x": 21,
+                  "y": 426,
+                  "w": 42,
+                  "h": 245,
+                  "orientation": "vertical",
+                  "style": {
+                    "color": "#3A7BD5"
+                  },
+                  "value": {
+                    "min": 0,
+                    "max": 1,
+                    "step": 0,
+                    "default": 0
+                  },
+                  "motion": {
+                    "touchMode": "relative",
+                    "sensitivity": 1.0,
+                    "resetOnDoubleTap": true,
+                    "sendInterval": 20
+                  },
+                  "on": {
+                    "change": "set $level = round($value * 255)\nsend mixer1 \"SET CH$ch VOL $level\\n\""
+                  },
+                  "receive": []
+                }
+              ],
+              "style": {
+                "background": "#26282B"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "editor": {
+    "grid": 10,
+    "snap": true
+  }
+}
