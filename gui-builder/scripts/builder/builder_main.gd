@@ -9,7 +9,6 @@ extends Control
 ## small (a few hundred widgets at most), so this is simpler than recording
 ## each kind of change and cannot miss one.
 
-const PALETTE: Array[String] = ["button", "fader", "encoder", "label", "led", "image", "panel"]
 const HISTORY_LIMIT := 200
 const FILE_FILTER := "*.guipkg.json ; GUI package"
 
@@ -58,8 +57,11 @@ func _build_toolbar() -> void:
 	for item in [["New", _ask_new], ["Open", _show_open],
 			["Save", _save], ["Save As", _show_save], [],
 			["Undo", _undo], ["Redo", _redo], [],
-			["Group", _group], ["Ungroup", _ungroup], ["Duplicate", _duplicate], [],
-			["Resolution", _ask_resolution], []]:
+			["Group", _group, "Select several widgets (drag a box over them or Shift+click), then Group (Ctrl+G)"],
+			["Ungroup", _ungroup, "Break the selected group back into its widgets (Ctrl+Shift+G)"],
+			["Duplicate", _duplicate, "Copy the selection into the nearest free cells; a group's names and numbers go up by one (Ctrl+D)"], [],
+			["Resolution", _ask_resolution], [],
+			["Play", _play, "Try this layout as the Player runs it, without saving (F5)"], []]:
 		if item.is_empty():
 			bar.add_child(VSeparator.new())
 			continue
@@ -67,6 +69,8 @@ func _build_toolbar() -> void:
 		b.text = item[0]
 		b.focus_mode = Control.FOCUS_NONE
 		b.pressed.connect(item[1])
+		if item.size() > 2:
+			b.tooltip_text = item[2]
 		bar.add_child(b)
 
 	var ll := Label.new()
@@ -119,16 +123,25 @@ func _build_work_area() -> void:
 	var palette := VBoxContainer.new()
 	palette.custom_minimum_size.x = 320
 	palette.add_theme_constant_override("separation", 6)
-	var heading := Label.new()
-	heading.text = "  Widgets"
-	palette.add_child(heading)
-	for type in PALETTE:
-		palette.add_child(_palette_item(type))
+	# The palette lists GuiWidgetTypes by category.
+	for category: Array in GuiWidgetTypes.CATEGORIES:
+		var types := GuiWidgetTypes.in_category(category[0])
+		if types.is_empty():
+			continue
+		var heading := Label.new()
+		heading.text = "  " + category[1]
+		palette.add_child(heading)
+		var flow := HFlowContainer.new()
+		for type in types:
+			for preset: Array in GuiWidgetTypes.presets(type):
+				flow.add_child(_palette_item(type, Vector2i(preset[0], preset[1])))
+		palette.add_child(flow)
 	var tree_heading := Label.new()
 	tree_heading.text = "  Hierarchy"
 	palette.add_child(tree_heading)
 	_hierarchy.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_hierarchy.picked.connect(func(id: String) -> void: _canvas.select(id))
+	_hierarchy.move_requested.connect(_move_widget)
 	palette.add_child(_hierarchy)
 	row.add_child(_padded(palette))
 
@@ -149,6 +162,9 @@ func _build_work_area() -> void:
 		_canvas.show_page(pkg, _layout(), _canvas.page_index)
 		_canvas.select(id)
 		_record())
+	_inspector.layout_edited.connect(func() -> void:
+		_canvas.show_page(pkg, _layout(), _canvas.page_index)
+		_record())
 	scroll.add_child(_inspector)
 	row.add_child(_padded(scroll))
 
@@ -161,19 +177,19 @@ func _padded(content: Control) -> Control:
 	return m
 
 
-## A palette button that starts a drag carrying the widget type.
-func _palette_item(type: String) -> Button:
+## A palette button that starts a drag carrying the widget type and size.
+func _palette_item(type: String, size: Vector2i) -> Button:
+	var info := GuiWidgetTypes.info(type)
 	var b := Button.new()
-	b.text = type.capitalize()
-	b.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	b.custom_minimum_size.y = 48
+	b.text = "%s  %dx%d" % [info.get("name", type), size.x, size.y]
+	b.custom_minimum_size = Vector2(140, 48)
 	b.focus_mode = Control.FOCUS_NONE
 	b.tooltip_text = "Drag onto the screen"
 	b.set_drag_forwarding(func(_at: Vector2) -> Variant:
 		var preview := Label.new()
-		preview.text = "+ " + type.capitalize()
+		preview.text = "+ " + info.get("name", type)
 		b.set_drag_preview(preview)
-		return {"kind": "new_widget", "type": type},
+		return {"kind": "new_widget", "type": type, "size": size},
 		Callable(), Callable())
 	return b
 
@@ -269,7 +285,8 @@ func _on_selection(widget_id: String) -> void:
 	if _canvas.layout.is_empty():
 		return  # nothing shown yet
 	var at := GuiPackage.locate(_canvas.page(), widget_id)
-	_inspector.show_widget(pkg, at.get("widget", {}), _canvas.page())
+	_inspector.show_widget(pkg, _layout(), _canvas.page(), at.get("widget", {}),
+			_canvas.is_strict(widget_id))
 	_hierarchy.show_selection(widget_id)
 
 
@@ -296,15 +313,36 @@ func _ungroup() -> void:
 func _duplicate() -> void:
 	if _canvas.selected_id.is_empty():
 		return
-	var copy := GuiPackage.duplicate_widget(pkg, _canvas.page(), _canvas.selected_id)
+	var copy := GuiPackage.duplicate_widget(pkg, _layout(), _canvas.page(), _canvas.selected_id)
 	if not copy.is_empty():
 		_after_structure_change(copy["id"])
+
+
+## A row dragged in the hierarchy: reorder, or move into or out of a
+## container (see GuiPackage.move_widget).
+func _move_widget(widget_id: String, parent_id: String, index: int) -> void:
+	var error: Array[String] = []
+	var new_id := GuiPackage.move_widget(pkg, _layout(), _canvas.page(), widget_id, parent_id,
+			index, error)
+	if new_id.is_empty():
+		OS.alert(error[0], "Move")
+		return
+	_after_structure_change(new_id)
 
 
 func _after_structure_change(select_id: String) -> void:
 	_canvas.show_page(pkg, _layout(), _canvas.page_index)
 	_canvas.select(select_id)
 	_record()
+
+
+## --- play ------------------------------------------------------------------------
+
+func _play() -> void:
+	var window := preload("res://scripts/builder/play_window.gd").new()
+	add_child(window)
+	window.play(pkg, _layout_index, _canvas.page_index)
+	window.popup_centered()
 
 
 func _add_page() -> void:
@@ -391,6 +429,10 @@ func _save_to(path: String) -> void:
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if not (event is InputEventKey and event.pressed and not event.echo):
+		return
+	if event.keycode == KEY_F5:
+		_play()
+		get_viewport().set_input_as_handled()
 		return
 	if not event.is_command_or_control_pressed():
 		return

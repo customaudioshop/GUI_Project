@@ -14,17 +14,16 @@ extends RefCounted
 ## Functions that take a "layout" also accept anything with "screen" and
 ## "pages" keys.
 ##
+## Widgets are blocks on a grid: "col", "row" for the top-left cell and
+## "cw", "ch" for the size in cells. Pixels are worked out by GuiGrid.
+##
 ## Rough frame: packages are saved as a single .json file for now. The zip
 ## container (.guipkg with assets/) comes with image and font support.
 
 const FORMAT := "guipkg"
-const FORMAT_VERSION := 1
+## 2: widgets placed in grid cells. 1 (pixels) is converted on load.
+const FORMAT_VERSION := 2
 
-const WIDGET_TYPES: Array[String] = [
-	"button", "fader", "encoder", "label", "led", "image", "panel", "group",
-]
-
-const MIN_WIDGET_SIZE := 16
 const MIN_SCREEN := 320
 const MAX_SCREEN := 7680
 
@@ -39,9 +38,10 @@ static func create(width: int, height: int, orientation := "landscape",
 			"author": "",
 			"created": Time.get_datetime_string_from_system(true) + "Z",
 		},
+		"theme": {},
+		"styles": {},
 		"devices": {},
 		"layouts": [new_layout("layout1", layout_name, width, height, orientation)],
-		"editor": {"grid": 10, "snap": true},
 	}
 
 
@@ -57,6 +57,7 @@ static func new_layout(id: String, layout_name: String, width: int, height: int,
 			"fit": "keep",
 			"background": "#1E1E1E",
 		},
+		"grid": GuiGrid.default_grid(width, height),
 		"pages": [new_page("main", "Main")],
 	}
 
@@ -102,53 +103,16 @@ static func add_page(pkg: Dictionary) -> String:
 
 
 static func new_page(id: String, page_name: String) -> Dictionary:
-	return {"id": id, "name": page_name, "background": "#202020", "widgets": []}
+	return {"id": id, "name": page_name, "widgets": []}
 
 
-## A new widget of [param type] at ([param x], [param y]) with an id that is
-## unique in [param pkg]. It is not added to any page.
-static func new_widget(pkg: Dictionary, type: String, x: int, y: int) -> Dictionary:
-	var w := {"id": unique_id(pkg, type), "type": type, "x": x, "y": y}
-	w.merge(_defaults(type))
+## A new widget of [param type] with its top-left cell at ([param col],
+## [param row]), its default size and an id that is unique in [param pkg].
+## It is not added to any page.
+static func new_widget(pkg: Dictionary, type: String, col: int, row: int) -> Dictionary:
+	var w := {"id": unique_id(pkg, type), "type": type, "col": col, "row": row}
+	w.merge(GuiWidgetTypes.defaults(type))
 	return w
-
-
-static func _defaults(type: String) -> Dictionary:
-	match type:
-		"button":
-			return {"w": 120, "h": 60, "mode": "momentary",
-				"style": {"text": "Button", "color": "#3A7BD5"},
-				"value": {"min": 0, "max": 1, "step": 1, "default": 0},
-				"on": {}, "receive": []}
-		"fader":
-			return {"w": 60, "h": 300, "orientation": "vertical",
-				"style": {"color": "#3A7BD5"},
-				"value": {"min": 0, "max": 1, "step": 0, "default": 0},
-				"motion": {"touchMode": "relative", "sensitivity": 1.0,
-					"resetOnDoubleTap": true, "sendInterval": 20},
-				"on": {}, "receive": []}
-		"encoder":
-			return {"w": 120, "h": 120,
-				"style": {"color": "#3A7BD5"},
-				"value": {"min": 0, "max": 1, "step": 0, "default": 0},
-				"motion": {"endless": false, "angleRange": 270, "drag": "vertical",
-					"sensitivity": 1.0, "acceleration": true,
-					"resetOnDoubleTap": true, "sendInterval": 20},
-				"on": {}, "receive": []}
-		"label":
-			return {"w": 160, "h": 40, "style": {"text": "Label", "fontSize": 20},
-				"receive": []}
-		"led":
-			return {"w": 40, "h": 40, "style": {"color": "#4CD964"},
-				"value": {"min": 0, "max": 1, "step": 0, "default": 0},
-				"receive": []}
-		"image":
-			return {"w": 160, "h": 120, "style": {"image": ""}, "on": {}}
-		"panel":
-			return {"w": 300, "h": 200, "style": {"background": "#2B2B2B"}}
-		"group":
-			return {"w": 100, "h": 100, "params": {}, "children": []}
-	return {"w": 100, "h": 100}
 
 
 ## [param base] followed by the first number that makes it unused, e.g. fader1.
@@ -185,20 +149,14 @@ static func screen_size(layout: Dictionary) -> Vector2i:
 	return Vector2i(int(s.get("width", 1280)), int(s.get("height", 800)))
 
 
-## Moves every widget so the layout keeps its proportions in a new base
-## resolution. Font sizes follow the smaller of the two ratios.
+## Gives the layout a new base resolution. Blocks keep their cells, so the
+## layout keeps its arrangement and the cells grow or shrink with the screen.
+## Font sizes follow the smaller of the two ratios.
 static func rescale(layout: Dictionary, width: int, height: int) -> void:
 	var old := screen_size(layout)
-	var sx := float(width) / old.x
-	var sy := float(height) / old.y
-	var sf := minf(sx, sy)
-	# Group children are relative to their group, so the same ratios apply.
+	var sf := minf(float(width) / old.x, float(height) / old.y)
 	for page: Dictionary in layout.get("pages", []):
 		walk(page.get("widgets", []), func(w: Dictionary) -> void:
-			w["x"] = roundi(w["x"] * sx)
-			w["y"] = roundi(w["y"] * sy)
-			w["w"] = maxi(MIN_WIDGET_SIZE, roundi(w["w"] * sx))
-			w["h"] = maxi(MIN_WIDGET_SIZE, roundi(w["h"] * sy))
 			var style: Dictionary = w.get("style", {})
 			if style.has("fontSize"):
 				style["fontSize"] = maxi(6, roundi(style["fontSize"] * sf)))
@@ -208,8 +166,8 @@ static func rescale(layout: Dictionary, width: int, height: int) -> void:
 
 ## --- hierarchy -----------------------------------------------------------------
 ##
-## A "group" widget holds other widgets in "children", positioned relative to
-## the group. Its "params" (e.g. {"ch": 1}) are readable as $ch in the scripts
+## A container widget (panel, group) holds other widgets in "children",
+## placed on its own inner grid. A group's "params" (e.g. {"ch": 1}) are readable as $ch in the scripts
 ## of everything inside it, so every copy of a channel strip can share the same
 ## scripts. See docs/Package-format.md 5.7.
 
@@ -223,34 +181,28 @@ static func walk(widgets: Array, fn: Callable) -> void:
 
 
 ## Where widget [param id] is on [param page]: {"widget", "list" (the Array
-## holding it), "parent" (its group or {}), "origin" (page position of the
-## list's coordinate origin)}. Empty when not found.
+## holding it), "parent" (its container or {})}. Empty when not found.
 static func locate(page: Dictionary, id: String) -> Dictionary:
-	return _locate_in(page.get("widgets", []), id, {}, Vector2.ZERO)
+	return _locate_in(page.get("widgets", []), id, {})
 
 
-static func _locate_in(list: Array, id: String, parent: Dictionary, origin: Vector2) -> Dictionary:
+static func _locate_in(list: Array, id: String, parent: Dictionary) -> Dictionary:
 	for w: Dictionary in list:
 		if w.get("id") == id:
-			return {"widget": w, "list": list, "parent": parent, "origin": origin}
+			return {"widget": w, "list": list, "parent": parent}
 		if w.has("children"):
-			var found := _locate_in(w["children"], id, w, origin + Vector2(w["x"], w["y"]))
+			var found := _locate_in(w["children"], id, w)
 			if not found.is_empty():
 				return found
 	return {}
 
 
-## The widget's rectangle in page coordinates.
-static func page_rect(page: Dictionary, id: String) -> Rect2:
-	var at := locate(page, id)
-	if at.is_empty():
-		return Rect2()
-	var w: Dictionary = at["widget"]
-	return Rect2(at["origin"] + Vector2(w["x"], w["y"]), Vector2(w["w"], w["h"]))
-
-
-## Wraps sibling widgets [param ids] in a new group sized to fit them.
+## Wraps sibling widgets [param ids] in a new group covering their cells.
 ## Returns the group, or {} when they are not all in the same list.
+##
+## Everything inside gets the group's name in front of its id (button1 ->
+## group1_button1), so duplicating the group renumbers the whole set
+## (group2, group2_button1) instead of scattering new numbers.
 static func group_widgets(pkg: Dictionary, page: Dictionary, ids: Array) -> Dictionary:
 	if ids.is_empty():
 		return {}
@@ -264,23 +216,99 @@ static func group_widgets(pkg: Dictionary, page: Dictionary, ids: Array) -> Dict
 			members.append(w)
 	if members.size() != ids.size():
 		return {}
-	var box := Rect2(members[0]["x"], members[0]["y"], members[0]["w"], members[0]["h"])
+	var box := GuiGrid.cells_of(members[0])
 	for w in members:
-		box = box.merge(Rect2(w["x"], w["y"], w["w"], w["h"]))
-	var group := new_widget(pkg, "group", int(box.position.x), int(box.position.y))
-	group["w"] = int(box.size.x)
-	group["h"] = int(box.size.y)
+		box = box.merge(GuiGrid.cells_of(w))
+	# The group spans exactly its members' cells and has no grid of its own,
+	# so its inner cells line up with the outer ones and nothing moves.
+	var group := new_widget(pkg, "group", box.position.x, box.position.y)
+	group["cw"] = box.size.x
+	group["ch"] = box.size.y
 	var at := list.find(members[0])
 	for w in members:
 		list.erase(w)
-		w["x"] -= group["x"]
-		w["y"] -= group["y"]
+		w["col"] -= box.position.x
+		w["row"] -= box.position.y
 		group["children"].append(w)
 	list.insert(mini(at, list.size()), group)
+	_prefix_ids(pkg, group["id"], group["children"])
 	return group
 
 
-## Replaces group [param id] by its children, keeping them where they are.
+## Puts [param prefix] and "_" in front of every id in [param widgets] (and
+## inside them) that lacks it.
+static func _prefix_ids(pkg: Dictionary, prefix: String, widgets: Array) -> void:
+	var used := _used_ids(pkg)
+	walk(widgets, func(w: Dictionary) -> void:
+		var id: String = w["id"]
+		if id.begins_with(prefix + "_"):
+			return
+		var new_id: String = prefix + "_" + id
+		if used.has(new_id) or new_id.length() > 32:
+			new_id = _next_free(used, prefix + "_" + w["type"])
+		used[new_id] = true
+		w["id"] = new_id)
+
+
+## Moves widget [param id] to position [param index] of container
+## [param parent_id]'s list ("" is the page). Returns the widget's id
+## afterwards, or "" with [param error] filled in when it cannot go there.
+##
+## Within the same list only the order changes. Into another container the
+## block keeps its cells when they are free there, otherwise it takes the
+## nearest free cells (sized to the container's rules); moving into a panel
+## or group puts the container's name in front of its id, as a drop does.
+static func move_widget(pkg: Dictionary, layout: Dictionary, page: Dictionary, id: String,
+		parent_id: String, index: int, error: Array[String] = []) -> String:
+	var at := locate(page, id)
+	if at.is_empty():
+		error.append("'%s' is not on this page." % id)
+		return ""
+	var w: Dictionary = at["widget"]
+	var inside := {}
+	walk([w], func(x: Dictionary) -> void: inside[x["id"]] = true)
+	if inside.has(parent_id):
+		error.append("A widget cannot go inside itself.")
+		return ""
+	var target: Array = page["widgets"]
+	if not parent_id.is_empty():
+		var parent: Dictionary = locate(page, parent_id).get("widget", {})
+		if not parent.has("children"):
+			error.append("'%s' cannot hold other widgets." % parent_id)
+			return ""
+		target = parent["children"]
+	var source: Array = at["list"]
+
+	if is_same(source, target):
+		var from := source.find(w)
+		source.remove_at(from)
+		if from < index:
+			index -= 1
+		source.insert(clampi(index, 0, source.size()), w)
+		return id
+
+	var box: Dictionary = GuiGrid.layout_page(GuiTheme.of(pkg), layout, page)[parent_id]
+	var cells := GuiGrid.cells_of(w)
+	if box["strict"]:
+		cells.size = GuiWidgetTypes.nearest_size(w["type"], cells.size)
+	if not GuiGrid.fits(box, target, cells):
+		var spot := GuiGrid.free_spot(box, target, cells.size, cells.position)
+		if spot.x < 0:
+			error.append("There is no room for a %dx%d block in '%s'." % [cells.size.x, cells.size.y,
+					parent_id if not parent_id.is_empty() else page.get("name", "the page")])
+			return ""
+		cells.position = spot
+	source.erase(w)
+	GuiGrid.set_cells(w, cells)
+	target.insert(clampi(index, 0, target.size()), w)
+	if not parent_id.is_empty():
+		_prefix_ids(pkg, parent_id, [w])
+	return w["id"]
+
+
+## Replaces container [param id] by its children, keeping them where they
+## are. When the container has a grid of its own, cells are scaled to the
+## outer grid, so blocks may land a little off and are shown as conflicts.
 static func ungroup(page: Dictionary, id: String) -> Array:
 	var at := locate(page, id)
 	if at.is_empty() or not at["widget"].has("children"):
@@ -289,22 +317,30 @@ static func ungroup(page: Dictionary, id: String) -> Array:
 	var list: Array = at["list"]
 	var index := list.find(group)
 	list.remove_at(index)
+	var g: Dictionary = group.get("grid", {})
+	var scale := Vector2(float(group["cw"]) / int(g.get("cols", group["cw"])),
+			float(group["ch"]) / int(g.get("rows", group["ch"])))
 	var children: Array = group["children"]
 	for i in children.size():
 		var w: Dictionary = children[i]
-		w["x"] += group["x"]
-		w["y"] += group["y"]
+		var c := GuiGrid.cells_of(w)
+		var pos := (Vector2(c.position) * scale).floor()
+		var end := (Vector2(c.end) * scale).ceil()
+		GuiGrid.set_cells(w, Rect2i(Vector2i(pos) + Vector2i(group["col"], group["row"]),
+				Vector2i(end - pos).max(Vector2i.ONE)))
 		list.insert(index + i, w)
 	return children.map(func(w: Dictionary) -> String: return w["id"])
 
 
-## Copies widget [param id] (with everything inside it) next to the original.
+## Copies widget [param id] (with everything inside it) into the free spot
+## nearest the original's right-hand side, in [param layout].
 ##
 ## Ids are renumbered from the original's trailing number: ch1 with ch1_fader
 ## and ch1_mute becomes ch2 with ch2_fader and ch2_mute. Every number in
 ## "params" goes up by the same amount, so a strip whose scripts use $ch talks
 ## to the next channel without any script being touched.
-static func duplicate_widget(pkg: Dictionary, page: Dictionary, id: String) -> Dictionary:
+static func duplicate_widget(pkg: Dictionary, layout: Dictionary, page: Dictionary,
+		id: String) -> Dictionary:
 	var at := locate(page, id)
 	if at.is_empty():
 		return {}
@@ -333,8 +369,14 @@ static func duplicate_widget(pkg: Dictionary, page: Dictionary, id: String) -> D
 		if params[key] is float or params[key] is int:
 			params[key] += step
 
-	copy["x"] = original["x"] + original["w"]
 	var list: Array = at["list"]
+	var box: Dictionary = GuiGrid.layout_page(GuiTheme.of(pkg), layout, page)[
+			at["parent"].get("id", "")]
+	var c := GuiGrid.cells_of(original)
+	var spot := GuiGrid.free_spot(box, list, c.size, c.position + Vector2i(c.size.x, 0))
+	# No room: put it to the right anyway; the Builder shows the conflict.
+	copy["col"] = spot.x if spot.x >= 0 else c.end.x
+	copy["row"] = spot.y if spot.x >= 0 else c.position.y
 	list.insert(list.find(original) + 1, copy)
 	return copy
 
@@ -379,6 +421,8 @@ static func load_file(path: String, error: Array[String] = []) -> Dictionary:
 	if int(data.get("formatVersion", 0)) > FORMAT_VERSION:
 		error.append("%s was made by a newer GUI Builder. Please update." % path.get_file())
 		return {}
+	if int(data.get("formatVersion", 0)) < 2:
+		_from_pixels(data)
 	normalize(data)
 	return data
 
@@ -387,26 +431,83 @@ static func save_file(pkg: Dictionary, path: String) -> Error:
 	var f := FileAccess.open(path, FileAccess.WRITE)
 	if f == null:
 		return FileAccess.get_open_error()
-	f.store_string(JSON.stringify(pkg, "  ", false))
+	f.store_string(JSON.stringify(_whole_numbers(pkg), "  ", false))
 	return OK
 
 
-## JSON numbers come back as floats; geometry is integer pixels.
+## JSON hands numbers back as floats; write 5000 rather than 5000.0.
+static func _whole_numbers(v: Variant) -> Variant:
+	if v is float and v == floorf(v) and absf(v) < 1e15:
+		return int(v)
+	if v is Dictionary:
+		var out := {}
+		for key: Variant in v:
+			out[key] = _whole_numbers(v[key])
+		return out
+	if v is Array:
+		return v.map(_whole_numbers)
+	return v
+
+
+## JSON numbers come back as floats; cells and grids are integers.
 static func normalize(pkg: Dictionary) -> void:
-	# Early drafts had one screen and its pages at the top level.
+	_lift_single_screen(pkg)
+	for layout: Dictionary in pkg.get("layouts", []):
+		var s: Dictionary = layout.get("screen", {})
+		for key in ["width", "height"]:
+			s[key] = int(s.get(key, 0))
+		if not layout.has("grid"):
+			layout["grid"] = GuiGrid.default_grid(s["width"], s["height"])
+		_ints(layout["grid"])
+		for page: Dictionary in layout.get("pages", []):
+			walk(page.get("widgets", []), func(w: Dictionary) -> void:
+				GuiGrid.set_cells(w, GuiGrid.cells_of(w))
+				if w.has("grid"):
+					_ints(w["grid"]))
+	for key in ["theme", "styles"]:
+		if not pkg.get(key) is Dictionary:
+			pkg[key] = {}
+
+
+## Early drafts had one screen and its pages at the top level.
+static func _lift_single_screen(pkg: Dictionary) -> void:
 	if not pkg.has("layouts") and pkg.has("pages"):
 		pkg["layouts"] = [{"id": "layout1", "name": "Layout",
 			"screen": pkg["screen"], "pages": pkg["pages"]}]
 		pkg.erase("screen")
 		pkg.erase("pages")
+
+
+static func _ints(d: Dictionary) -> void:
+	for key: String in d:
+		if d[key] is float:
+			d[key] = int(d[key])
+
+
+## Format 1 placed widgets in pixels. Each layout gets a grid whose cells are
+## about TARGET_PITCH wide with no gap or padding, and every widget takes the
+## cells nearest its old rectangle. Overlaps that rounding creates are left
+## for the Builder to show.
+static func _from_pixels(pkg: Dictionary) -> void:
+	_lift_single_screen(pkg)
 	for layout: Dictionary in pkg.get("layouts", []):
-		var s: Dictionary = layout.get("screen", {})
-		for key in ["width", "height"]:
-			s[key] = int(s.get(key, 0))
+		var s := screen_size(layout)
+		var grid := GuiGrid.default_grid(s.x, s.y)
+		grid["gap"] = 0
+		grid["padding"] = 0
+		layout["grid"] = grid
+		var cell := Vector2(float(s.x) / grid["cols"], float(s.y) / grid["rows"])
 		for page: Dictionary in layout.get("pages", []):
 			walk(page.get("widgets", []), func(w: Dictionary) -> void:
-				for key in ["x", "y", "w", "h"]:
-					w[key] = int(w.get(key, 0)))
+				if w.has("col") or not w.has("x"):
+					return
+				var pos := (Vector2(float(w["x"]), float(w["y"])) / cell).round()
+				var size := (Vector2(float(w["w"]), float(w["h"])) / cell).round().max(Vector2.ONE)
+				GuiGrid.set_cells(w, Rect2i(Vector2i(pos), Vector2i(size)))
+				for key in ["x", "y", "w", "h", "orientation"]:
+					w.erase(key))
+	pkg.erase("editor")
+	pkg["formatVersion"] = FORMAT_VERSION
 
 
 static func deep_copy(pkg: Dictionary) -> Dictionary:

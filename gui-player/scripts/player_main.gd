@@ -20,7 +20,7 @@ const LAST_PATH_FILE := "user://last_package.txt"
 var pkg: Dictionary
 var layout: Dictionary
 var page_id := ""
-var _values := {}          ## widget id -> last value, kept across layout switches
+var _values := {}          ## widget id (or "id.part") -> last value, kept across layout switches
 var _page_view: GuiPageView
 var _open_dialog := FileDialog.new()
 
@@ -137,11 +137,13 @@ func show_page(id: String) -> void:
 	_page_view = GuiPageView.new()
 	_page_view.widget_event.connect(_on_widget_event)
 	add_child(_page_view)
-	_page_view.build(layout, page, true)
-	for widget_id: String in _values:
-		var view := _page_view.get_view(widget_id)
+	_page_view.build(pkg, layout, page, true)
+	for key: String in _values:
+		# "eq1.inner" is part "inner" of widget eq1.
+		var id_part := key.split(".")
+		var view := _page_view.get_view(id_part[0])
 		if view:
-			view.set_value_silently(_values[widget_id])
+			view.set_value_silently(_values[key], id_part[1] if id_part.size() > 1 else "")
 
 
 func _on_widget_event(widget_id: String, event: String, value: float) -> void:
