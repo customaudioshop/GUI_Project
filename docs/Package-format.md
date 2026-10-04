@@ -251,7 +251,7 @@ GuiScript에서 쓰는 장치 이름(`mixer1`, `light1` …)을 여기서 정의
 
 | `type` | 분류 | 기본 크기 | 크기 (페이지·패널) | 값 | 이벤트 | 설명 |
 |---|---|---|---|---|---|---|
-| `button` | Basic | 2×1 | 1×1, 2×1, 3×1, 1×2, 2×2 | 0/1 | `press`, `release`, `change` | `mode`: `momentary`(누르는 동안 1) \| `toggle`(누를 때마다 0↔1). 팔레트에 1×1과 2×1 두 가지가 있습니다. |
+| `button` | Basic | 2×1 | 1×1, 2×1, 3×1, 1×2, 2×2 | 0/1 | `press`, `release`, `change` | `mode`: `momentary`(누르는 동안 1) \| `toggle`(누를 때마다 0↔1). 팔레트에 1×1과 2×1 두 가지가 있습니다. `style.icon`: `none` \| `up` \| `down` \| `left` \| `right` (화살표) \| `stop` (정지 ■) \| `pause` (일시정지 ❚❚) \| `record` (녹화 ●, 기본 빨간색) \| `rewind` (되감기 ◀◀) \| `ffwd` (빨리 감기 ▶▶) \| `prev` (이전 트랙 ⏮) \| `next` (다음 트랙 ⏭). `style.iconColor`로 아이콘 색을 바꿀 수 있습니다(기본: 글자색, record는 테마 `danger`). 팔레트의 Arrow ↑↓←→, Stop ■, Pause ❚❚, Record ●, Rewind ◀◀, Fast fwd ▶▶, Prev track ⏮, Next track ⏭는 아이콘만 있는 1×1 버튼이며 ID는 `arrow_up1`, `stop1`, `pause1`, `record1`, `rewind1`, `ffwd1`, `prev1`, `next1` 식입니다. 아이콘과 `text`가 둘 다 있으면 아이콘이 위, 글자가 아래에 놓입니다. |
 | `fader` | Basic | 1×3 | 1×2 ~ 1×5, 2×1 ~ 4×1 | min~max | `change`, `touch`, `release` | 직선 슬라이더. 긴 쪽 방향으로 움직입니다(세로 블록이면 세로 페이더). |
 | `encoder` | Basic | 1×1 | 1×1, 2×2, 3×3 | min~max | `change`, `touch`, `release` | 1단 엔코더(팔레트 이름 "Encoder 1-layer"). 로터리 엔코더/노브. 끝이 있는 노브와 무한 회전 모두 (5.5) |
 | `dual_encoder` | Basic | 2×2 | 1×1, 2×2, 3×3 | `outer`, `inner` 각각 min~max | 부분마다 `change`, `touch`, `release` | 2단 엔코더(팔레트 이름 "Encoder 2-layer"). 바깥 링과 안쪽 노브가 한 축에 있습니다(예: 바깥 = 주파수, 안쪽 = 게인). 아래 "여러 값을 가진 위젯" |
@@ -392,6 +392,7 @@ GuiScript에서 쓰는 장치 이름(`mixer1`, `light1` …)을 여기서 정의
   "textDim": "#A0A4AC",
   "border": "#4A4D55",
   "ok": "#4CD964",
+  "danger": "#E53935",
   "fontSize": 18,
   "radius": 6,
   "gap": 8,

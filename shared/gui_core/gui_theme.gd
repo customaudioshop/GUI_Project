@@ -19,6 +19,7 @@ const DEFAULT := {
 	"textDim": "#A0A4AC",
 	"border": "#4A4D55",
 	"ok": "#4CD964",             ## LED colour
+	"danger": "#E53935",         ## Record icon, warnings
 	"fontSize": 18,
 	"radius": 6,
 	"gap": 8,                    ## Space between cells, unless a grid sets its own

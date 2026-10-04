@@ -254,7 +254,78 @@ func _draw_button() -> void:
 	box.set_border_width_all(2)
 	box.set_corner_radius_all(int(_style("radius", "radius")))
 	draw_style_box(box, Rect2(Vector2.ZERO, size))
-	_draw_text(Rect2(Vector2.ZERO, size), str(_style("text", "")), _color("textColor", "text"))
+	var text := str(_style("text", ""))
+	var icon := str(_style("icon", "none"))
+	if icon in ["up", "down", "left", "right", "stop", "pause", "record", "rewind", "ffwd", "prev", "next"]:
+		# Record is red unless the widget sets its own icon colour.
+		var icon_color := _color("iconColor", "danger" if icon == "record" else "text")
+		# With text, the icon takes the upper part and the text the lower.
+		var icon_rect := Rect2(Vector2.ZERO, size)
+		if not text.is_empty():
+			icon_rect.size.y = size.y * 0.6
+			_draw_text(Rect2(0, size.y * 0.55, size.x, size.y * 0.45), text,
+					_color("textColor", "text"))
+		match icon:
+			"stop": _draw_stop(icon_rect, icon_color)
+			"pause": _draw_pause(icon_rect, icon_color)
+			"record": draw_circle(icon_rect.get_center(),
+					minf(icon_rect.size.x, icon_rect.size.y) * 0.24, icon_color)
+			"rewind": _draw_double_arrow(icon_rect, "left", icon_color)
+			"ffwd": _draw_double_arrow(icon_rect, "right", icon_color)
+			"prev": _draw_track_arrow(icon_rect, "left", icon_color)
+			"next": _draw_track_arrow(icon_rect, "right", icon_color)
+			_: _draw_arrow(icon_rect, icon, icon_color)
+	else:
+		_draw_text(Rect2(Vector2.ZERO, size), text, _color("textColor", "text"))
+
+
+## A solid square, the same visual weight as an arrow, centred in [param rect].
+func _draw_stop(rect: Rect2, color: Color) -> void:
+	var half := minf(rect.size.x, rect.size.y) * 0.21
+	draw_rect(Rect2(rect.get_center() - Vector2(half, half), Vector2(half, half) * 2.0), color)
+
+
+## The stop square split into two bars by a vertical gap.
+func _draw_pause(rect: Rect2, color: Color) -> void:
+	var half := minf(rect.size.x, rect.size.y) * 0.21
+	var bar := Vector2(half * 0.7, half * 2.0)
+	var top_left := rect.get_center() - Vector2(half, half)
+	draw_rect(Rect2(top_left, bar), color)
+	draw_rect(Rect2(top_left + Vector2(half * 2.0 - bar.x, 0), bar), color)
+
+
+## Two normal arrows overlapping: fast forward ("right") or rewind ("left").
+func _draw_double_arrow(rect: Rect2, direction: String, color: Color) -> void:
+	_draw_arrow(rect, direction, color, -0.45)
+	_draw_arrow(rect, direction, color, 0.45)
+
+
+## A normal arrow with a bar at its tip: next track ("right") or previous
+## track ("left").
+func _draw_track_arrow(rect: Rect2, direction: String, color: Color) -> void:
+	var r := minf(rect.size.x, rect.size.y) * 0.28
+	var dir := 1.0 if direction == "right" else -1.0
+	_draw_arrow(rect, direction, color, -0.2)
+	# The arrow's tip ends at 0.8 r from the centre; the bar starts there.
+	var c := rect.get_center()
+	var near_x := c.x + dir * r * 0.8
+	var far_x := c.x + dir * r * 1.15
+	draw_rect(Rect2(minf(near_x, far_x), c.y - r, absf(far_x - near_x), r * 2.0), color)
+
+
+## A solid triangle pointing [param direction], centred in [param rect].
+## [param shift] moves it along its own direction, in multiples of its size.
+func _draw_arrow(rect: Rect2, direction: String, color: Color, shift := 0.0) -> void:
+	var r := minf(rect.size.x, rect.size.y) * 0.28
+	var tip: Vector2 = {"up": Vector2.UP, "down": Vector2.DOWN,
+		"left": Vector2.LEFT, "right": Vector2.RIGHT}[direction]
+	var c := rect.get_center() + tip * r * shift
+	var side := Vector2(-tip.y, tip.x)
+	draw_colored_polygon(PackedVector2Array([
+		c + tip * r,
+		c - tip * r * 0.7 + side * r,
+		c - tip * r * 0.7 - side * r,
+	]), color)
 
 
 func _draw_fader() -> void:

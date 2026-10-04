@@ -133,8 +133,8 @@ func _build_work_area() -> void:
 		palette.add_child(heading)
 		var flow := HFlowContainer.new()
 		for type in types:
-			for preset: Array in GuiWidgetTypes.presets(type):
-				flow.add_child(_palette_item(type, Vector2i(preset[0], preset[1])))
+			for item: Dictionary in GuiWidgetTypes.palette_items(type):
+				flow.add_child(_palette_item(type, item))
 		palette.add_child(flow)
 	var tree_heading := Label.new()
 	tree_heading.text = "  Hierarchy"
@@ -177,19 +177,20 @@ func _padded(content: Control) -> Control:
 	return m
 
 
-## A palette button that starts a drag carrying the widget type and size.
-func _palette_item(type: String, size: Vector2i) -> Button:
-	var info := GuiWidgetTypes.info(type)
+## A palette button that starts a drag carrying the widget type, size and
+## any preset fields (see GuiWidgetTypes.palette_items).
+func _palette_item(type: String, item: Dictionary) -> Button:
 	var b := Button.new()
-	b.text = "%s  %dx%d" % [info.get("name", type), size.x, size.y]
+	b.text = item["name"]
 	b.custom_minimum_size = Vector2(140, 48)
 	b.focus_mode = Control.FOCUS_NONE
 	b.tooltip_text = "Drag onto the screen"
 	b.set_drag_forwarding(func(_at: Vector2) -> Variant:
 		var preview := Label.new()
-		preview.text = "+ " + info.get("name", type)
+		preview.text = "+ " + item["name"]
 		b.set_drag_preview(preview)
-		return {"kind": "new_widget", "type": type, "size": size},
+		return {"kind": "new_widget", "type": type, "size": item["size"],
+			"set": item["set"], "id": item["id"]},
 		Callable(), Callable())
 	return b
 

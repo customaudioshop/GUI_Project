@@ -453,10 +453,16 @@ func _drop_data(at: Vector2, data: Variant) -> void:
 		return
 	var parent: String = target["parent"]
 	var w := GuiPackage.new_widget(pkg, data["type"], 0, 0)
+	GuiWidgetTypes.apply_fields(w, data.get("set", {}))
+	var base: String = data.get("id", "")
+	if base.is_empty():
+		base = data["type"]
 	if not parent.is_empty():
 		# ch1_encoder1 rather than encoder7, so a duplicate of ch1 renames it
 		# to ch2_encoder1.
-		w["id"] = GuiPackage.unique_id(pkg, "%s_%s" % [parent, data["type"]])
+		base = "%s_%s" % [parent, base]
+	if base != data["type"] or not parent.is_empty():
+		w["id"] = GuiPackage.unique_id(pkg, base)
 	GuiGrid.set_cells(w, target["cells"])
 	_list(parent).append(w)
 	show_page(pkg, layout, page_index)

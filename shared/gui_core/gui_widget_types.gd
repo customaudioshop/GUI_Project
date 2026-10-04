@@ -15,6 +15,10 @@ extends RefCounted
 ## "presets" lists the sizes the palette offers ready-made, e.g. a 1x1 and a
 ## 2x1 button. Without it the palette offers the default "size".
 ##
+## "variants" are extra palette items: the same type with some fields preset,
+## e.g. arrow buttons. Each has a "name", a "size", the fields to "set" on the
+## new widget and an "id" base for its ids (arrow_up1, arrow_up2 …).
+##
 ## "parts" names the values of a widget that has more than one, e.g. a dual
 ## encoder's "outer" and "inner". Each part keeps its own "value", "motion",
 ## "on" and "receive" under its name; its events go out as "<id>.<part>".
@@ -36,9 +40,24 @@ const TYPES := {
 		"name": "Button", "category": "basic",
 		"size": [2, 1], "sizes": [[1, 1], [2, 1], [3, 1], [1, 2], [2, 2]],
 		"presets": [[1, 1], [2, 1]],
+		"variants": [
+			{"name": "Arrow ↑", "size": [1, 1], "id": "arrow_up", "set": {"style": {"icon": "up", "text": ""}}},
+			{"name": "Arrow ↓", "size": [1, 1], "id": "arrow_down", "set": {"style": {"icon": "down", "text": ""}}},
+			{"name": "Arrow ←", "size": [1, 1], "id": "arrow_left", "set": {"style": {"icon": "left", "text": ""}}},
+			{"name": "Arrow →", "size": [1, 1], "id": "arrow_right", "set": {"style": {"icon": "right", "text": ""}}},
+			{"name": "Stop ■", "size": [1, 1], "id": "stop", "set": {"style": {"icon": "stop", "text": ""}}},
+			{"name": "Pause ❚❚", "size": [1, 1], "id": "pause", "set": {"style": {"icon": "pause", "text": ""}}},
+			{"name": "Record ●", "size": [1, 1], "id": "record", "set": {"style": {"icon": "record", "text": "", "iconColor": "#E53935"}}},
+			{"name": "Rewind ◀◀", "size": [1, 1], "id": "rewind", "set": {"style": {"icon": "rewind", "text": ""}}},
+			{"name": "Fast fwd ▶▶", "size": [1, 1], "id": "ffwd", "set": {"style": {"icon": "ffwd", "text": ""}}},
+			{"name": "Prev track ⏮", "size": [1, 1], "id": "prev", "set": {"style": {"icon": "prev", "text": ""}}},
+			{"name": "Next track ⏭", "size": [1, 1], "id": "next", "set": {"style": {"icon": "next", "text": ""}}},
+		],
 		"events": ["press", "release", "change"],
 		"props": [
 			{"key": "style.text", "label": "Text", "kind": "text"},
+			{"key": "style.icon", "label": "Icon", "kind": "choice", "options": ["none", "up", "down", "left", "right", "stop", "pause", "record", "rewind", "ffwd", "prev", "next"]},
+			{"key": "style.iconColor", "label": "Icon color", "kind": "color", "theme": "text"},
 			{"key": "mode", "label": "Mode", "kind": "choice", "options": ["momentary", "toggle"]},
 			{"key": "style.color", "label": "Color", "kind": "color", "theme": "primary"},
 		],
@@ -167,6 +186,31 @@ static func in_category(category: String) -> Array[String]:
 ## The palette's ready-made sizes for [param type].
 static func presets(type: String) -> Array:
 	return info(type).get("presets", [info(type).get("size", [1, 1])])
+
+
+## Everything the palette offers for [param type]: one item per preset size,
+## then the variants. Each item is {"name", "size" (Vector2i), "set", "id"};
+## "set" and "id" are empty for plain presets.
+static func palette_items(type: String) -> Array[Dictionary]:
+	var t := info(type)
+	var items: Array[Dictionary] = []
+	for p: Array in presets(type):
+		items.append({"name": "%s  %dx%d" % [t.get("name", type), p[0], p[1]],
+			"size": Vector2i(p[0], p[1]), "set": {}, "id": ""})
+	for v: Dictionary in t.get("variants", []):
+		items.append({"name": v["name"], "size": Vector2i(v["size"][0], v["size"][1]),
+			"set": v.get("set", {}), "id": v.get("id", "")})
+	return items
+
+
+## Writes [param fields] into [param widget], merging nested Dictionaries
+## (so setting style.icon keeps style's other keys).
+static func apply_fields(widget: Dictionary, fields: Dictionary) -> void:
+	for key: String in fields:
+		if fields[key] is Dictionary and widget.get(key) is Dictionary:
+			apply_fields(widget[key], fields[key])
+		else:
+			widget[key] = fields[key].duplicate(true) if fields[key] is Dictionary else fields[key]
 
 
 ## Value part names, or [] for a widget with one value.
