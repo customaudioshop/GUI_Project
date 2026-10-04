@@ -23,6 +23,11 @@ extends RefCounted
 ## encoder's "outer" and "inner". Each part keeps its own "value", "motion",
 ## "on" and "receive" under its name; its events go out as "<id>.<part>".
 ##
+## "layer": "back" marks background types: they ignore the no-overlap rule,
+## are drawn behind every other block in the same container and do not take
+## clicks on the canvas (pick them in the hierarchy). With "area": "full"
+## they cover the whole page or panel whatever their cells say.
+##
 ## "container" marks types that hold other widgets in "children":
 ##   "strict"  children keep to their types' sizes (panel)
 ##   "free"    children take any size (group, i.e. a component's inside)
@@ -56,8 +61,14 @@ const TYPES := {
 		"events": ["press", "release", "change"],
 		"props": [
 			{"key": "style.text", "label": "Text", "kind": "text"},
+			{"key": "style.fontWeight", "label": "Font weight", "kind": "choice", "options": ["normal", "bold", "light"], "theme": "fontWeight"},
 			{"key": "style.icon", "label": "Icon", "kind": "choice", "options": ["none", "up", "down", "left", "right", "stop", "pause", "record", "rewind", "ffwd", "prev", "next"]},
 			{"key": "style.iconColor", "label": "Icon color", "kind": "color", "theme": "text"},
+			{"key": "style.textOutline", "label": "Outline (px)", "kind": "int", "min": 0, "max": 20, "theme": "textOutline"},
+			{"key": "style.textOutlineColor", "label": "Outline color", "kind": "color", "theme": "textOutlineColor"},
+			{"key": "style.textShadow", "label": "Shadow (px)", "kind": "int", "min": 0, "max": 20, "theme": "textShadow"},
+			{"key": "style.textShadowColor", "label": "Shadow color", "kind": "color", "theme": "textShadowColor"},
+			{"key": "style.textShadowBlur", "label": "Shadow blur (px)", "kind": "int", "min": 0, "max": 20, "theme": "textShadowBlur"},
 			{"key": "mode", "label": "Mode", "kind": "choice", "options": ["momentary", "toggle"]},
 			{"key": "style.color", "label": "Color", "kind": "color", "theme": "primary"},
 		],
@@ -122,8 +133,15 @@ const TYPES := {
 		"events": [],
 		"props": [
 			{"key": "style.text", "label": "Text", "kind": "text"},
+			{"key": "style.align", "label": "Align", "kind": "choice", "options": ["center", "left", "right"]},
 			{"key": "style.fontSize", "label": "Font size", "kind": "int", "theme": "fontSize"},
+			{"key": "style.fontWeight", "label": "Font weight", "kind": "choice", "options": ["normal", "bold", "light"], "theme": "fontWeight"},
 			{"key": "style.textColor", "label": "Text color", "kind": "color", "theme": "text"},
+			{"key": "style.textOutline", "label": "Outline (px)", "kind": "int", "min": 0, "max": 20, "theme": "textOutline"},
+			{"key": "style.textOutlineColor", "label": "Outline color", "kind": "color", "theme": "textOutlineColor"},
+			{"key": "style.textShadow", "label": "Shadow (px)", "kind": "int", "min": 0, "max": 20, "theme": "textShadow"},
+			{"key": "style.textShadowColor", "label": "Shadow color", "kind": "color", "theme": "textShadowColor"},
+			{"key": "style.textShadowBlur", "label": "Shadow blur (px)", "kind": "int", "min": 0, "max": 20, "theme": "textShadowBlur"},
 		],
 		"defaults": {"style": {"text": "Label"}, "receive": []},
 	},
@@ -141,9 +159,23 @@ const TYPES := {
 		"size": [2, 2],
 		"events": ["press"],
 		"props": [
-			{"key": "style.image", "label": "Image", "kind": "text"},
+			{"key": "style.image", "label": "Image", "kind": "image"},
+			{"key": "style.fit", "label": "Fit", "kind": "choice", "options": ["contain", "cover", "stretch"]},
 		],
-		"defaults": {"style": {"image": ""}, "on": {}},
+		"defaults": {"style": {"image": "", "fit": "contain"}, "on": {}},
+	},
+	"background": {
+		"name": "Background", "category": "display",
+		"size": [4, 3], "layer": "back",
+		"events": [],
+		"props": [
+			{"key": "style.image", "label": "Image", "kind": "image"},
+			{"key": "area", "label": "Area", "kind": "choice", "options": ["full", "cells"]},
+			{"key": "style.fit", "label": "Fit", "kind": "choice", "options": ["cover", "contain", "stretch"]},
+			{"key": "style.opacity", "label": "Opacity (%)", "kind": "int", "min": 0, "max": 100},
+			{"key": "style.background", "label": "Fill color", "kind": "color", "theme": "background"},
+		],
+		"defaults": {"area": "full", "style": {"image": "", "fit": "cover", "opacity": 100}},
 	},
 	"panel": {
 		"name": "Panel", "category": "structure",
@@ -211,6 +243,11 @@ static func apply_fields(widget: Dictionary, fields: Dictionary) -> void:
 			apply_fields(widget[key], fields[key])
 		else:
 			widget[key] = fields[key].duplicate(true) if fields[key] is Dictionary else fields[key]
+
+
+## True for background types (see "layer" above).
+static func is_back(type: String) -> bool:
+	return info(type).get("layer", "") == "back"
 
 
 ## Value part names, or [] for a widget with one value.

@@ -215,6 +215,7 @@ GuiScript에서 쓰는 장치 이름(`mixer1`, `light1` …)을 여기서 정의
 | `cols`, `rows` | 칸 개수. 새 레이아웃은 칸 하나가 약 120 논리 픽셀이 되게 정합니다(최소 4×4). 예: FHD 1920×1080 → 16×9 |
 | `gap` | (선택) 칸 사이 간격(픽셀). 없으면 테마의 `gap` |
 | `padding` | (선택) 화면 가장자리와 그리드 사이 여백(픽셀). 없으면 테마의 `padding` |
+| `square` | (선택) `true`면 칸을 정확한 정사각형(1:1)으로 만듭니다. 칸 한 변은 가로·세로로 계산한 칸 크기 중 작은 쪽이고, 그리드는 가운데 정렬되어 **왼쪽과 오른쪽 여백이 같고, 위쪽과 아래쪽 여백도 같습니다**. `padding`은 가장 작은 여백이고, 남는 공간은 그 축의 양쪽에 반씩 나뉩니다. Builder에서는 Columns/Rows 옆의 링크(체인) 버튼이며, 켜져 있으면 열을 바꿀 때 행이(행을 바꾸면 열이) 정사각형에 가장 가깝게 자동으로 따라 바뀝니다. 16:9 화면에서는 열 1개당 행이 약 0.56개라서, 열을 늘려도 행이 그대로일 때가 있습니다. |
 
 칸 크기는 계산합니다: `칸 너비 = (화면 너비 − 2 × padding − (cols − 1) × gap) / cols`. 블록의 픽셀 사각형은 `x = padding + col × (칸 너비 + gap)`, `너비 = cw × 칸 너비 + (cw − 1) × gap`입니다(높이도 같음). 그래서 해상도, 칸 수, 간격, 테마 중 무엇을 바꿔도 모든 블록이 일관되게 다시 배치됩니다.
 
@@ -255,9 +256,10 @@ GuiScript에서 쓰는 장치 이름(`mixer1`, `light1` …)을 여기서 정의
 | `fader` | Basic | 1×3 | 1×2 ~ 1×5, 2×1 ~ 4×1 | min~max | `change`, `touch`, `release` | 직선 슬라이더. 긴 쪽 방향으로 움직입니다(세로 블록이면 세로 페이더). |
 | `encoder` | Basic | 1×1 | 1×1, 2×2, 3×3 | min~max | `change`, `touch`, `release` | 1단 엔코더(팔레트 이름 "Encoder 1-layer"). 로터리 엔코더/노브. 끝이 있는 노브와 무한 회전 모두 (5.5) |
 | `dual_encoder` | Basic | 2×2 | 1×1, 2×2, 3×3 | `outer`, `inner` 각각 min~max | 부분마다 `change`, `touch`, `release` | 2단 엔코더(팔레트 이름 "Encoder 2-layer"). 바깥 링과 안쪽 노브가 한 축에 있습니다(예: 바깥 = 주파수, 안쪽 = 게인). 아래 "여러 값을 가진 위젯" |
-| `label` | Display | 2×1 | 아무 크기 | 텍스트 | — | 글자 표시. 수신으로 글자를 바꿀 수 있습니다. |
+| `label` | Display | 2×1 | 아무 크기 | 텍스트 | — | 글자 표시. 수신으로 글자를 바꿀 수 있습니다. `style.align`: `center`(기본) \| `left` \| `right`. 왼쪽/오른쪽 정렬은 블록 가장자리에서 8px 안쪽에 맞춥니다. |
 | `led` | Display | 1×1 | 아무 크기 | 0~1 | — | 상태 표시등. 값에 따라 밝기/색이 바뀝니다. |
-| `image` | Display | 2×2 | 아무 크기 | — | `press` | 그림. 누르면 이벤트를 낼 수 있습니다. |
+| `image` | Display | 2×2 | 아무 크기 | — | `press` | 그림. 누르면 이벤트를 낼 수 있습니다. `style.image`(경로), `style.fit`: `contain`(기본, 비율 유지하며 전부 보임) \| `cover`(비율 유지하며 꽉 채움, 넘치는 부분 잘림) \| `stretch`(늘려서 채움) |
+| `background` | Display | 4×3 | 아무 크기 | — | — | 배경 그림. **겹침 규칙에서 빠져서** 다른 블록 밑에 깔 수 있고, 같은 페이지·패널의 다른 블록보다 항상 뒤에 그려집니다. `area`: `full`(기본, 페이지면 화면 전체, 패널이면 제목 띠 아래 전체) \| `cells`(자기 칸만). `style.image`, `style.fit`(기본 `cover`), `style.opacity`(0~100 %), `style.background`(그림 밑에 깔 단색, 선택). Builder 캔버스에서 클릭으로는 선택되지 않으며(앞의 위젯을 가리지 않도록) 계층 패널에서 선택합니다. |
 | `panel` | Structure | 4×3 | 아무 크기 | — | — | 제목 띠가 있는 상자. 안에 자기 그리드로 위젯을 담습니다(`title`, `children`, `grid`). |
 | `group` | Structure | — | 아무 크기 | — | — | 컴포넌트. 위젯을 묶어 복제해서 씁니다 (5.7). 팔레트에는 없고 Group 명령으로 만듭니다. |
 
@@ -394,6 +396,12 @@ GuiScript에서 쓰는 장치 이름(`mixer1`, `light1` …)을 여기서 정의
   "ok": "#4CD964",
   "danger": "#E53935",
   "fontSize": 18,
+  "fontWeight": "normal",
+  "textOutline": 0,
+  "textOutlineColor": "#000000",
+  "textShadow": 0,
+  "textShadowColor": "#000000A0",
+  "textShadowBlur": 0,
   "radius": 6,
   "gap": 8,
   "padding": 16,
@@ -439,11 +447,19 @@ GuiScript에서 쓰는 장치 이름(`mixer1`, `light1` …)을 여기서 정의
 | `background` | button, fader, encoder, panel, group | `surface` (panel은 `panel.background`) |
 | `textColor` | button, label | `text` |
 | `fontSize` | button, label | `fontSize` |
+| `fontWeight` | button, label (`light` \| `normal` \| `bold`) | `fontWeight` (패널 제목은 `panel.titleFontWeight` = `bold`) |
+| `textOutline`, `textOutlineColor` | button, label. 글자 외곽선 두께(px, 0 = 없음)와 색 | `textOutline` = 0, `textOutlineColor` = `#000000` |
+| `textShadow`, `textShadowColor` | button, label. 글자 그림자(오른쪽 아래로 밀리는 거리 px, 0 = 없음)와 색 | `textShadow` = 0, `textShadowColor` = `#000000A0` |
+| `textShadowBlur` | button, label. 그림자 흐림 정도(px, 0 = 선명). 반투명 외곽선을 점점 넓게 여러 겹 겹쳐 그려서 흐리게 보이게 합니다. | `textShadowBlur` = 0 |
 | `radius` | button, panel | `radius` (panel은 `panel.radius`) |
 | `borderColor`, `borderWidth` | panel | `panel.border`, `panel.borderWidth` |
 | `image`, `font` | image, (예정) 이미지 스킨, 글꼴 | — |
 
 상태별 모양(눌림, 선택됨, 비활성, 오프라인)과 이미지 스킨은 예정입니다.
+
+**이미지 경로**: `style.image`는 패키지 파일이 있는 폴더 기준 상대 경로이거나 절대 경로입니다. Builder의 Browse로 패키지 폴더 안의 파일을 고르면 상대 경로로 저장되고, 다른 폴더로 "다른 이름으로 저장"하면 경로를 새 위치 기준으로 다시 계산합니다. 지금은 이미지가 패키지 옆에 따로 있으므로 패키지를 옮길 때 같이 옮겨야 합니다. zip 패키지(`.guipkg`)가 생기면 이미지가 패키지 안 `assets/`에 들어갑니다(예정).
+
+**기본 글꼴**: Builder와 Player의 모든 글자는 내장된 **Noto Sans KR**로 그립니다(`shared/gui_core/fonts/`, SIL Open Font License, `OFL.txt`). 기기에 설치된 글꼴에 기대지 않으므로 PC, Mac, iOS, Android에서 한글과 영문이 똑같이 보이고 글자 폭도 같습니다. 굵기는 `fontWeight`로 고릅니다: `light`(300), `normal`(400, 기본), `bold`(700). 가변 폰트 파일 하나(약 10MB)에 모든 굵기가 들어 있어서, 굵기를 더 추가해도 파일은 늘지 않습니다. 패키지에 다른 글꼴을 넣는 기능(`font` 키, zip 패키지의 `assets/fonts/`)은 예정입니다.
 
 ### 5.7 그룹 (계층 구조)
 

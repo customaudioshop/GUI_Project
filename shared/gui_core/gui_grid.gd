@@ -29,6 +29,45 @@ static func default_grid(width: int, height: int) -> Dictionary:
 	}
 
 
+## Shrinks [param box]'s content so its cells are exactly square, centred:
+## the left and right margins stay equal, and so do the top and bottom. The
+## padding is the smallest margin; the space left over is split between the
+## two sides of the axis that has it.
+static func _make_square(box: Dictionary) -> void:
+	var cell := cell_size(box)
+	var side := minf(cell.x, cell.y)
+	var gap: float = box["gap"]
+	var want := Vector2(box["cols"] * side + gap * (box["cols"] - 1),
+			box["rows"] * side + gap * (box["rows"] - 1))
+	var c: Rect2 = box["content"]
+	box["content"] = Rect2(c.position + (c.size - want) / 2.0, want)
+
+
+## The row count that makes the page's cells closest to square when it has
+## [param cols] columns, i.e. that leaves the least margin once the cells are
+## made exactly square. Used while the Builder's column/row link is on (grid
+## "square": true).
+static func square_rows(theme: Dictionary, layout: Dictionary, cols: int) -> int:
+	var area := _content_size(theme, layout)
+	var gap := float(layout.get("grid", {}).get("gap", theme["gap"]))
+	var cell := (area.x - gap * (cols - 1)) / maxi(1, cols)
+	return maxi(1, roundi((area.y + gap) / maxf(1.0, cell + gap)))
+
+
+## The column count that makes the cells closest to square with [param rows].
+static func square_cols(theme: Dictionary, layout: Dictionary, rows: int) -> int:
+	var area := _content_size(theme, layout)
+	var gap := float(layout.get("grid", {}).get("gap", theme["gap"]))
+	var cell := (area.y - gap * (rows - 1)) / maxi(1, rows)
+	return maxi(1, roundi((area.x + gap) / maxf(1.0, cell + gap)))
+
+
+## The page's area inside its padding.
+static func _content_size(theme: Dictionary, layout: Dictionary) -> Vector2:
+	var pad := float(layout.get("grid", {}).get("padding", theme["padding"]))
+	return (Vector2(GuiPackage.screen_size(layout)) - Vector2(pad, pad) * 2.0).max(Vector2.ONE)
+
+
 ## Every rectangle on [param page]:
 ##   "" -> the page's box
 ##   widget id -> {"rect": Rect2 in page coordinates, "local": Rect2 relative
@@ -47,6 +86,8 @@ static func layout_page(theme: Dictionary, layout: Dictionary, page: Dictionary)
 		"strict": true,
 		"parent": "",
 	}
+	if g.get("square", false):
+		_make_square(page_box)
 	var out := {"": page_box}
 	_place(theme, page.get("widgets", []), page_box, "", out)
 	return out
@@ -55,6 +96,8 @@ static func layout_page(theme: Dictionary, layout: Dictionary, page: Dictionary)
 static func _place(theme: Dictionary, list: Array, box: Dictionary, parent_id: String, out: Dictionary) -> void:
 	for w: Dictionary in list:
 		var r := cell_rect(box, cells_of(w))
+		if GuiWidgetTypes.is_back(w["type"]) and w.get("area", "full") == "full":
+			r = box.get("fill", box["rect"])  # the whole page, or a panel below its title
 		var entry := {"rect": r, "local": Rect2(r.position - box["rect"].position, r.size),
 			"parent": parent_id}
 		if w.has("children"):
@@ -69,14 +112,17 @@ static func _place(theme: Dictionary, list: Array, box: Dictionary, parent_id: S
 static func _inner_box(theme: Dictionary, w: Dictionary, r: Rect2, outer: Dictionary) -> Dictionary:
 	var g: Dictionary = w.get("grid", {})
 	var content := r
+	var fill := r
 	if w["type"] == "panel":
 		var p: Dictionary = theme["panel"]
 		var top := float(p["titleHeight"]) if not str(w.get("title", "")).is_empty() else 0.0
 		var pad := float(p["padding"])
 		content = Rect2(r.position + Vector2(pad, top + pad),
 				(r.size - Vector2(pad * 2.0, top + pad * 2.0)).max(Vector2.ONE))
+		fill = Rect2(r.position + Vector2(0, top), (r.size - Vector2(0, top)).max(Vector2.ONE))
 	return {
 		"content": content,
+		"fill": fill,             ## what a full-area background covers
 		"cols": maxi(1, int(g.get("cols", w["cw"]))),
 		"rows": maxi(1, int(g.get("rows", w["ch"]))),
 		"gap": float(g.get("gap", outer["gap"])),
@@ -136,6 +182,8 @@ static func fits(box: Dictionary, list: Array, cells: Rect2i, ignore: Array = []
 	if not bounds(box).encloses(cells):
 		return false
 	for w: Dictionary in list:
+		if GuiWidgetTypes.is_back(w["type"]):
+			continue  # backgrounds may lie under anything
 		if not w["id"] in ignore and cells_of(w).intersects(cells):
 			return false
 	return true
@@ -162,12 +210,15 @@ static func free_spot(box: Dictionary, list: Array, block: Vector2i, near: Vecto
 static func conflicts(box: Dictionary, list: Array) -> Array[String]:
 	var out: Array[String] = []
 	for i in list.size():
+		if GuiWidgetTypes.is_back(list[i]["type"]):
+			continue
 		var a := cells_of(list[i])
 		if not bounds(box).encloses(a):
 			out.append(list[i]["id"])
 			continue
 		for j in list.size():
-			if i != j and a.intersects(cells_of(list[j])):
+			if i != j and not GuiWidgetTypes.is_back(list[j]["type"]) \
+					and a.intersects(cells_of(list[j])):
 				out.append(list[i]["id"])
 				break
 	return out

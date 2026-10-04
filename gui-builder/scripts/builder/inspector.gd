@@ -139,12 +139,42 @@ func _show_layout() -> void:
 	_note("Every widget is a block of grid cells. Drag widgets from the left onto the screen.")
 	var grid: Dictionary = _layout["grid"]
 	var theme := GuiTheme.of(_pkg)
-	for f in [["cols", "Columns", 1, MAX_CELLS, 4], ["rows", "Rows", 1, MAX_CELLS, 4],
-			["gap", "Gap (px)", 0, 200, theme["gap"]], ["padding", "Padding (px)", 0, 400, theme["padding"]]]:
+	var layout := _layout
+	var cols := _spin(1, MAX_CELLS, 1)
+	var rows := _spin(1, MAX_CELLS, 1)
+	cols.value = grid.get("cols", 4)
+	rows.value = grid.get("rows", 4)
+	# With the link on, the other count follows so cells stay square.
+	var keep_square := func(changed: String) -> void:
+		if not grid.get("square", false):
+			return
+		if changed == "rows":
+			grid["cols"] = clampi(GuiGrid.square_cols(theme, layout, grid["rows"]), 1, MAX_CELLS)
+			cols.set_value_no_signal(grid["cols"])
+		else:
+			grid["rows"] = clampi(GuiGrid.square_rows(theme, layout, grid["cols"]), 1, MAX_CELLS)
+			rows.set_value_no_signal(grid["rows"])
+	cols.value_changed.connect(func(v: float) -> void:
+		grid["cols"] = int(v)
+		keep_square.call("cols")
+		layout_edited.emit())
+	rows.value_changed.connect(func(v: float) -> void:
+		grid["rows"] = int(v)
+		keep_square.call("rows")
+		layout_edited.emit())
+	var link := _link_button(grid.get("square", false))
+	link.toggled.connect(func(on: bool) -> void:
+		grid["square"] = on
+		keep_square.call("cols")
+		layout_edited.emit())
+	_linked_rows([["Columns", cols], ["Rows", rows]], link)
+
+	for f in [["gap", "Gap (px)", 0, 200, theme["gap"]], ["padding", "Padding (px)", 0, 400, theme["padding"]]]:
 		var s := _spin(f[2], f[3], 1)
 		s.value = grid.get(f[0], f[4])
 		s.value_changed.connect(func(v: float) -> void:
 			grid[f[0]] = int(v)
+			keep_square.call("cols")
 			layout_edited.emit())
 		_row(f[1], s)
 
@@ -178,8 +208,10 @@ func _prop_field(prop: Dictionary) -> void:
 	match prop["kind"]:
 		"text":
 			_text_field(prop["label"], str(current if current != null else ""), apply)
+		"image":
+			_image_field(prop["label"], str(current if current != null else ""), apply)
 		"int":
-			var s := _spin(1, 400, 1)
+			var s := _spin(prop.get("min", 1), prop.get("max", 400), 1)
 			s.value = float(current if current != null else 0)
 			s.value_changed.connect(func(v: float) -> void: apply.call(int(v)))
 			_row(prop["label"], s)
@@ -281,6 +313,61 @@ func _row(label: String, field: Control) -> void:
 	add_child(row)
 
 
+## Two or more fields stacked, with [param link] beside them spanning all
+## the rows, like the chain between width and height in image editors.
+func _linked_rows(fields: Array, link: Control) -> void:
+	var outer := HBoxContainer.new()
+	var stack := VBoxContainer.new()
+	stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for f: Array in fields:
+		var row := HBoxContainer.new()
+		var l := Label.new()
+		l.text = f[0]
+		l.custom_minimum_size.x = 120
+		var field: Control = f[1]
+		field.custom_minimum_size.x = FIELD_WIDTH - 44
+		field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(l)
+		row.add_child(field)
+		stack.add_child(row)
+	outer.add_child(stack)
+	outer.add_child(link)
+	add_child(outer)
+
+
+## A toggle drawn as a chain: closed links when on, broken when off.
+func _link_button(on: bool) -> Button:
+	var b := Button.new()
+	b.toggle_mode = true
+	b.button_pressed = on
+	b.flat = true
+	b.focus_mode = Control.FOCUS_NONE
+	b.custom_minimum_size = Vector2(40, 0)
+	b.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	b.tooltip_text = "Link columns and rows: keep cells square (1:1)"
+	b.toggled.connect(func(_on: bool) -> void: b.queue_redraw())
+	b.draw.connect(func() -> void:
+		var color := Color(1.0, 0.75, 0.2) if b.button_pressed else Color(0.55, 0.57, 0.62)
+		var c := b.size / 2.0
+		var w := 12.0
+		var h := 14.0
+		# Brackets from the two fields to the chain.
+		b.draw_line(Vector2(4, 10), Vector2(c.x - 4, 10), color, 2.0)
+		b.draw_line(Vector2(4, b.size.y - 10), Vector2(c.x - 4, b.size.y - 10), color, 2.0)
+		b.draw_line(Vector2(c.x - 4, 10), Vector2(c.x - 4, c.y - h - 2), color, 2.0)
+		b.draw_line(Vector2(c.x - 4, b.size.y - 10), Vector2(c.x - 4, c.y + h + 2), color, 2.0)
+		# Two links; apart when off.
+		var apart := 0.0 if b.button_pressed else 5.0
+		var box := StyleBoxFlat.new()
+		box.draw_center = false
+		box.border_color = color
+		box.set_border_width_all(2)
+		box.set_corner_radius_all(6)
+		b.draw_style_box(box, Rect2(c.x - 4 - w / 2.0, c.y - h - apart, w, h + 4))
+		b.draw_style_box(box, Rect2(c.x - 4 - w / 2.0, c.y - 4 + apart, w, h + 4)))
+	return b
+
+
 ## A LineEdit that applies on Enter or when it loses focus.
 func _text_field(label: String, value: String, apply: Callable) -> void:
 	var e := LineEdit.new()
@@ -291,6 +378,36 @@ func _text_field(label: String, value: String, apply: Callable) -> void:
 	e.text_submitted.connect(commit)
 	e.focus_exited.connect(commit)
 	_row(label, e)
+
+
+## A path field with a Browse button. Paths inside the package's folder are
+## stored relative to it (GuiAssets.to_package_path).
+func _image_field(label: String, value: String, apply: Callable) -> void:
+	var box := HBoxContainer.new()
+	var e := LineEdit.new()
+	e.text = value
+	e.placeholder_text = "(none)"
+	e.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var commit := func(_t := "") -> void:
+		if e.text != value:
+			apply.call(e.text)
+	e.text_submitted.connect(commit)
+	e.focus_exited.connect(commit)
+	var browse := Button.new()
+	browse.text = "Browse"
+	var dialog := FileDialog.new()
+	dialog.access = FileDialog.ACCESS_FILESYSTEM
+	dialog.file_mode = FileDialog.FILE_MODE_OPEN_FILE
+	dialog.use_native_dialog = true
+	dialog.filters = PackedStringArray([GuiAssets.IMAGE_FILTERS])
+	dialog.file_selected.connect(func(path: String) -> void:
+		e.text = GuiAssets.to_package_path(path)
+		apply.call(e.text))
+	browse.pressed.connect(func() -> void: dialog.popup_centered_ratio(0.6))
+	box.add_child(e)
+	box.add_child(browse)
+	box.add_child(dialog)
+	_row(label, box)
 
 
 func _reshow() -> void:

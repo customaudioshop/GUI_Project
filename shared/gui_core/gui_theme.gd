@@ -21,6 +21,12 @@ const DEFAULT := {
 	"ok": "#4CD964",             ## LED colour
 	"danger": "#E53935",         ## Record icon, warnings
 	"fontSize": 18,
+	"fontWeight": "normal",      ## light, normal or bold (GuiFonts)
+	"textOutline": 0,            ## Outline width around text in px, 0 = none
+	"textOutlineColor": "#000000",
+	"textShadow": 0,             ## Drop shadow offset down-right in px, 0 = none
+	"textShadowColor": "#000000A0",
+	"textShadowBlur": 0,         ## Shadow softness in px, 0 = sharp
 	"radius": 6,
 	"gap": 8,                    ## Space between cells, unless a grid sets its own
 	"padding": 16,               ## Space around the page grid
@@ -34,6 +40,7 @@ const DEFAULT := {
 		"titleBackground": "#1F5F8B",
 		"titleColor": "#FFFFFF",
 		"titleFontSize": 18,
+		"titleFontWeight": "bold",
 	},
 }
 

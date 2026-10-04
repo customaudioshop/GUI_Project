@@ -33,9 +33,12 @@ func build(pkg: Dictionary, layout_data: Dictionary, page_data: Dictionary, inte
 
 
 ## Container children become child Controls of the container's view, so they
-## move with it.
+## move with it. Backgrounds are added first so they are drawn behind their
+## siblings wherever they are in the list.
 func _add_views(parent: Control, widgets: Array, interactive: bool) -> void:
-	for w: Dictionary in widgets:
+	var backs := widgets.filter(func(w: Dictionary) -> bool: return GuiWidgetTypes.is_back(w["type"]))
+	var rest := widgets.filter(func(w: Dictionary) -> bool: return not GuiWidgetTypes.is_back(w["type"]))
+	for w: Dictionary in backs + rest:
 		var view := GuiWidgetView.new()
 		view.name = w.get("id", "widget")
 		view.setup(w, pkg_theme, interactive)
@@ -76,6 +79,8 @@ func widget_at(point: Vector2, widgets: Variant = null) -> Dictionary:
 		widgets = page.get("widgets", [])
 	for i in range(widgets.size() - 1, -1, -1):
 		var w: Dictionary = widgets[i]
+		if GuiWidgetTypes.is_back(w["type"]):
+			continue  # backgrounds are picked in the hierarchy, not by clicking
 		if _rects.get(w["id"], {}).get("rect", Rect2()).has_point(point):
 			return w
 	return {}

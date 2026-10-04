@@ -39,7 +39,7 @@ project/assembly_name="GUI_Builder"
 [gui]
 
 theme/custom="res://theme/app_theme.tres"
-theme/custom_font="res://fonts/NotoSansKR-Regular.ttf"
+theme/custom_font="res://gui_core/fonts/noto_sans_kr_normal.tres"
 
 [physics]
 

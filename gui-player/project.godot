@@ -25,6 +25,10 @@ window/stretch/aspect="expand"
 
 project/assembly_name="GUI_Player"
 
+[gui]
+
+theme/custom_font="res://gui_core/fonts/noto_sans_kr_normal.tres"
+
 [physics]
 
 3d/physics_engine="Jolt Physics"

@@ -41,8 +41,8 @@ func setup(widget: Dictionary, package_theme: Dictionary, is_interactive: bool) 
 	pkg_theme = package_theme
 	interactive = is_interactive
 	mouse_filter = Control.MOUSE_FILTER_STOP if interactive else Control.MOUSE_FILTER_IGNORE
-	if data.has("children"):
-		mouse_filter = Control.MOUSE_FILTER_IGNORE  # its children take the touches
+	if data.has("children") or GuiWidgetTypes.is_back(data.get("type", "")):
+		mouse_filter = Control.MOUSE_FILTER_IGNORE  # children / widgets in front take the touches
 	for part in _parts():
 		_values[part] = float(_range(part).get("default", 0))
 
@@ -235,14 +235,26 @@ func _draw() -> void:
 		"fader": _draw_fader()
 		"encoder": _draw_encoder()
 		"dual_encoder": _draw_dual_encoder()
-		"label": _draw_text(Rect2(Vector2.ZERO, size), str(_style("text", "")),
-				_color("textColor", "text"))
+		"label": _draw_label()
 		"led": _draw_led()
 		"image": _draw_image()
+		"background": _draw_background()
 		"panel": _draw_panel()
 		"group":
 			if data.get("style", {}).has("background"):
 				draw_rect(Rect2(Vector2.ZERO, size), _color("background", "surface"))
+
+
+## Label text aligned by style.align (center by default). Left and right
+## keep a small inset from the block's edge.
+func _draw_label() -> void:
+	const INSET := 8.0
+	var align := HORIZONTAL_ALIGNMENT_CENTER
+	match str(_style("align", "")):
+		"left": align = HORIZONTAL_ALIGNMENT_LEFT
+		"right": align = HORIZONTAL_ALIGNMENT_RIGHT
+	_draw_text(Rect2(INSET, 0, maxf(1.0, size.x - INSET * 2.0), size.y),
+			str(_style("text", "")), _color("textColor", "text"), 0, align)
 
 
 func _draw_button() -> void:
@@ -399,10 +411,54 @@ func _draw_led() -> void:
 
 
 func _draw_image() -> void:
-	# TODO(assets): load style.image from the package
-	draw_rect(Rect2(Vector2.ZERO, size), Color(0.22, 0.22, 0.25))
+	var tex := GuiAssets.texture(str(data.get("style", {}).get("image", "")))
+	if tex == null:
+		_draw_placeholder("IMAGE")
+		return
+	_draw_fitted(tex, str(data.get("style", {}).get("fit", "contain")), Color.WHITE)
+
+
+## A full-area picture behind the other blocks: a fill colour, then the image.
+func _draw_background() -> void:
+	var opacity := clampf(float(data.get("style", {}).get("opacity", 100)) / 100.0, 0.0, 1.0)
+	var style: Dictionary = data.get("style", {})
+	if style.has("background"):
+		var fill := _color("background", "background")
+		fill.a *= opacity
+		draw_rect(Rect2(Vector2.ZERO, size), fill)
+	var tex := GuiAssets.texture(str(data.get("style", {}).get("image", "")))
+	if tex == null:
+		if not interactive and not style.has("background"):
+			_draw_placeholder("BACKGROUND")  # only in the Builder
+		return
+	_draw_fitted(tex, str(style.get("fit", "cover")), Color(1, 1, 1, opacity))
+
+
+## [param tex] in the widget's rectangle:
+##   "cover"    keeps proportions and fills it, cutting off what sticks out
+##   "contain"  keeps proportions and shows all of it (the default)
+##   "stretch"  fills it exactly
+func _draw_fitted(tex: Texture2D, fit: String, modulate: Color) -> void:
+	var area := Rect2(Vector2.ZERO, size)
+	var tex_size := tex.get_size()
+	match fit:
+		"stretch":
+			draw_texture_rect(tex, area, false, modulate)
+		"cover":
+			# Draw the middle part of the image that has the area's shape.
+			var scale := maxf(size.x / tex_size.x, size.y / tex_size.y)
+			var src_size := size / scale
+			draw_texture_rect_region(tex, area, Rect2((tex_size - src_size) / 2.0, src_size), modulate)
+		_:
+			var scale := minf(size.x / tex_size.x, size.y / tex_size.y)
+			var dst := tex_size * scale
+			draw_texture_rect(tex, Rect2((size - dst) / 2.0, dst), false, modulate)
+
+
+func _draw_placeholder(label: String) -> void:
+	draw_rect(Rect2(Vector2.ZERO, size), Color(0.22, 0.22, 0.25, 0.6))
 	draw_rect(Rect2(Vector2.ZERO, size), Color(0.45, 0.45, 0.5), false, 2.0)
-	_draw_text(Rect2(Vector2.ZERO, size), "IMAGE", Color(0.6, 0.6, 0.65))
+	_draw_text(Rect2(Vector2.ZERO, size), label, Color(0.6, 0.6, 0.65))
 
 
 ## A box with an optional title bar across the top. Its children sit on the
@@ -426,18 +482,60 @@ func _draw_panel() -> void:
 	draw_style_box(band, bar)
 	var pad := float(GuiTheme.value(pkg_theme, "panel.padding"))
 	_draw_text(bar.grow_individual(-pad, 0, -pad, 0), title, _theme_color("panel.titleColor"),
-			int(GuiTheme.value(pkg_theme, "panel.titleFontSize")), HORIZONTAL_ALIGNMENT_LEFT)
+			int(GuiTheme.value(pkg_theme, "panel.titleFontSize")), HORIZONTAL_ALIGNMENT_LEFT,
+			str(GuiTheme.value(pkg_theme, "panel.titleFontWeight")))
 
 
-## [param text] centred vertically in [param rect]. Font size 0 means the
-## widget's own (style.fontSize, else the theme's).
+## A blurred text shadow. Canvas drawing has no blur, so the shadow is
+## stacked from outlines that grow by [param blur] px in a few steps, each
+## faint: where they all overlap (the glyph itself) the colour reaches its
+## full strength, and it fades out towards the widest outline.
+func _draw_soft_shadow(font: Font, at: Vector2, text: String, align: HorizontalAlignment,
+		width: float, font_size: int, outline: int, blur: int, color: Color) -> void:
+	# Two layers per pixel of blur keeps the steps from showing.
+	var steps := clampi(blur * 2, 2, 24)
+	# Alpha per layer such that steps + 1 overlapping layers add up to color.a.
+	var layer := color
+	layer.a = 1.0 - pow(1.0 - color.a, 1.0 / (steps + 1))
+	var just := TextServer.JUSTIFICATION_NONE
+	for i in range(steps, 0, -1):
+		var grow := outline + blur * float(i) / steps
+		draw_string_outline(font, at, text, align, width, font_size, roundi(grow * 2.0), layer, just)
+	draw_string(font, at, text, align, width, font_size, layer, just)
+
+
+## [param text] centred vertically in [param rect]. Font size 0 and an empty
+## weight mean the widget's own (style.fontSize / style.fontWeight, else the
+## theme's).
 func _draw_text(rect: Rect2, text: String, color: Color, font_size := 0,
-		align := HORIZONTAL_ALIGNMENT_CENTER) -> void:
+		align := HORIZONTAL_ALIGNMENT_CENTER, weight := "") -> void:
 	if text.is_empty():
 		return
-	var font := get_theme_default_font()
+	if weight.is_empty():
+		weight = str(_style("fontWeight", "fontWeight"))
+	var font := GuiFonts.of(weight)
 	if font_size <= 0:
 		font_size = int(_style("fontSize", "fontSize"))
 	var y := rect.position.y + (rect.size.y + font.get_ascent(font_size) - font.get_descent(font_size)) / 2.0
-	draw_string(font, Vector2(rect.position.x, y), text, align, rect.size.x, font_size, color,
-			TextServer.JUSTIFICATION_NONE)
+	var pos := Vector2(rect.position.x, y)
+	var just := TextServer.JUSTIFICATION_NONE
+	var outline := int(_style("textOutline", "textOutline"))
+	var shadow := int(_style("textShadow", "textShadow"))
+	# Back to front: shadow (with the outline's thickness), outline, text.
+	if shadow > 0:
+		var shadow_color := _color("textShadowColor", "textShadowColor")
+		var at := pos + Vector2(shadow, shadow)
+		var blur := int(_style("textShadowBlur", "textShadowBlur"))
+		if blur > 0:
+			_draw_soft_shadow(font, at, text, align, rect.size.x, font_size, outline, blur,
+					shadow_color)
+		else:
+			if outline > 0:
+				draw_string_outline(font, at, text, align, rect.size.x, font_size, outline * 2,
+						shadow_color, just)
+			draw_string(font, at, text, align, rect.size.x, font_size, shadow_color, just)
+	if outline > 0:
+		# Godot's outline size is the full stroke, half of it outside the glyph.
+		draw_string_outline(font, pos, text, align, rect.size.x, font_size, outline * 2,
+				_color("textOutlineColor", "textOutlineColor"), just)
+	draw_string(font, pos, text, align, rect.size.x, font_size, color, just)

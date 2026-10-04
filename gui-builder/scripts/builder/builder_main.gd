@@ -215,6 +215,7 @@ func _build_dialogs() -> void:
 func _set_package(new_pkg: Dictionary, path: String) -> void:
 	pkg = new_pkg
 	file_path = path
+	GuiAssets.base_dir = path.get_base_dir()
 	_history.clear()
 	_history_at = -1
 	_layout_index = 0
@@ -420,6 +421,8 @@ func _save() -> void:
 func _save_to(path: String) -> void:
 	if not path.ends_with(".guipkg.json"):
 		path = path.trim_suffix(".json") + ".guipkg.json"
+	if path.get_base_dir() != GuiAssets.base_dir:
+		GuiAssets.move_package(pkg, path.get_base_dir())
 	var err := GuiPackage.save_file(pkg, path)
 	if err != OK:
 		OS.alert("Cannot save %s (%s)" % [path, error_string(err)], "Save")

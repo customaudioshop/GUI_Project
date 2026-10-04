@@ -76,6 +76,7 @@ func _open(path: String) -> bool:
 		if child != _open_dialog:
 			child.queue_free()
 	pkg = loaded
+	GuiAssets.base_dir = path.get_base_dir()
 	_values.clear()
 	_set_orientation_policy()
 	_use_layout(GuiPackage.pick_layout(pkg, Vector2(get_window().size)))

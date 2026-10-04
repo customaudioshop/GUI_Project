@@ -365,7 +365,10 @@ func _continue_drag(screen_pos: Vector2) -> void:
 		if cells != GuiGrid.cells_of(w):
 			GuiGrid.set_cells(w, cells)
 			_drag_changed = true
-		ok = ok and GuiGrid.fits(box, _list(parent), cells, _drag_orig.keys())
+		if GuiWidgetTypes.is_back(w["type"]):
+			ok = ok and GuiGrid.bounds(box).encloses(cells)  # may lie under anything
+		else:
+			ok = ok and GuiGrid.fits(box, _list(parent), cells, _drag_orig.keys())
 	_drag_ok = ok
 	_page_view.relayout()
 	_overlay.queue_redraw()
@@ -418,10 +421,12 @@ func _container_at(p: Vector2) -> String:
 
 ## Where a new block of [param block] cells dropped at [param p] goes:
 ## centred on the drop point, or the nearest free cells. {} when there is no
-## room.
-func _drop_target(p: Vector2, block: Vector2i) -> Dictionary:
+## room. A background takes the whole grid of the page or panel it lands on.
+func _drop_target(p: Vector2, block: Vector2i, type := "") -> Dictionary:
 	var parent := _container_at(p)
 	var box := _box(parent)
+	if GuiWidgetTypes.is_back(type):
+		return {"parent": parent, "cells": GuiGrid.bounds(box)}
 	var near := GuiGrid.cell_at(box, p - (Vector2(block - Vector2i.ONE) * GuiGrid.pitch(box)) / 2.0)
 	var spot := GuiGrid.free_spot(box, _list(parent), block, near)
 	if spot.x < 0:
@@ -440,14 +445,14 @@ func _drop_size(data: Dictionary) -> Vector2i:
 func _can_drop_data(at: Vector2, data: Variant) -> bool:
 	if pkg.is_empty() or not (data is Dictionary and data.get("kind") == "new_widget"):
 		return false
-	_drop_ghost = _drop_target(_to_page(at), _drop_size(data))
+	_drop_ghost = _drop_target(_to_page(at), _drop_size(data), data["type"])
 	_overlay.queue_redraw()
 	return not _drop_ghost.is_empty()
 
 
 ## A widget dropped onto a panel or group goes inside it.
 func _drop_data(at: Vector2, data: Variant) -> void:
-	var target := _drop_target(_to_page(at), _drop_size(data))
+	var target := _drop_target(_to_page(at), _drop_size(data), data["type"])
 	_drop_ghost = {}
 	if target.is_empty():
 		return
